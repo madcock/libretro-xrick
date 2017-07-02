@@ -124,15 +124,16 @@ CFLAGS   += $(INCFLAGS)
 CXXFLAGS +=	$(CFLAGS) $(INCFLAGS)
 CPPFLAGS += $(CFLAGS) $(INCFLAGS)
 
+LIBS := -lm
+
 OBJECTS := $(SOURCES_C:.c=.o)
 
 all: $(TARGET)
-
 $(TARGET): $(OBJECTS)
 ifeq ($(STATIC_LINKING_LINK),1)
 	$(AR) rcs $@ $(OBJECTS) 
 else
-	$(CC) $(fpic) $(SHARED) $(INCLUDES) -o $@ $(OBJECTS)  -lm
+	$(CC) $(fpic) $(SHARED) $(INCLUDES) -o $@ $(OBJECTS) $(LIBS)
 endif
 
 %.o: %.c
