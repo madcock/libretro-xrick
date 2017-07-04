@@ -55,9 +55,32 @@ void retro_set_input_poll(retro_input_poll_t cb)
    input_poll_cb = cb;
 }
 
+#ifdef _WIN32
+#define TIME_WRAP_VALUE	(~(DWORD)0)
+/* The first (low-resolution) ticks value of the application */
+static DWORD start;
+#endif
+
+void StartTicks(void)
+{
+#ifdef _WIN32
+	start = GetTickCount();
+#endif
+}
+
 long GetTicks(void)
 {
-   // in MSec
+#ifdef _WIN32
+   DWORD ticks;
+   DWORD now = GetTickCount();
+
+   if ( now < start )
+      ticks = (TIME_WRAP_VALUE-start) + now;
+   else
+      ticks = (now - start);
+
+   return(ticks);
+#else
 #ifndef _ANDROID_
 
 #ifdef __CELLOS_LV2__
@@ -84,7 +107,7 @@ long GetTicks(void)
    clock_gettime(CLOCK_MONOTONIC, &now);
    return (now.tv_sec*1000000 + now.tv_nsec/1000)/1000;
 #endif
-
+#endif
 } 
 
 extern void SDL_Uninit(void);

@@ -76,6 +76,8 @@ void retro_reset(void)
 {
 }
 
+void StartTicks(void);
+
 void retro_init(void)
 {    	
    const char *system_dir      = NULL;
@@ -86,6 +88,8 @@ void retro_init(void)
 #else
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
 #endif
+
+   StartTicks();
 
    // if defined, use the system directory			
    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
