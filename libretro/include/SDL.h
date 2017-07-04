@@ -8,7 +8,11 @@
 extern int Reset_Cold(void);
 extern int Reset_Warm(void);
 
+#ifdef _WIN32
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 #include <time.h>
 
 #include "SDL_types.h"
