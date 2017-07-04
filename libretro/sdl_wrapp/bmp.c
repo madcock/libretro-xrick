@@ -154,7 +154,7 @@ write_long(FILE *fp, /* I - File to write to */
 
 
 int SDL_SaveBMP(SDL_Surface *surface,const char *file){
-
+   int bw, pad;
    FILE *fp;                      /* Open file pointer */
    int  i,size,                     /* Size of file */
         infosize,                 /* Size of bitmap info */
@@ -262,8 +262,7 @@ int SDL_SaveBMP(SDL_Surface *surface,const char *file){
 
    printf("ici\n");
 
-   const int bw = surface->w/*retrow*/*3;
-                                       int pad;
+   bw = surface->w/*retrow*/*3;
 
    // Write the bitmap image upside down 
    pixflip = (Uint8 *) pixels + (surface->h/*retroh*/ *bw);
