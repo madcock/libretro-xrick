@@ -13,6 +13,9 @@ char RETRO_DIR[512];
 #include "sys/sys_time.h"
 #include "sys/timer.h"
 #define usleep  sys_timer_usleep
+#elif defined(_WIN32)
+#include <windows.h>
+#include <mmsystem.h>
 #else
 #include <sys/types.h>
 #include <sys/time.h>
