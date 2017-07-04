@@ -292,10 +292,18 @@ int SDL_SaveBMP(SDL_Surface *surface,const char *file){
 
 SDL_Surface * SDL_LoadBMP(const char *file)
 {
-   int y, x;
+   int padding = 0;
+   int y, x, psw, scanlinebytes;;
    int width,height,size;
+   unsigned char fileh[40];
    SDL_Surface *surf;
    RGBQUAD  LUT[256];
+   int result=0;
+   unsigned char* Buffer = NULL;
+   long bufpos = 0;   
+   long newpos = 0;
+   unsigned short coul;
+   unsigned short *pix = NULL;
 
    //printf("IN SDL LOAD BMP\n");
 
@@ -315,10 +323,8 @@ SDL_Surface * SDL_LoadBMP(const char *file)
       return (NULL);
    }
 
-   int result=0;
 
    fseek(fp,0,SEEK_SET);
-   unsigned char fileh[40];
    result=fread(fileh, 1,14, fp);
    if( result!=14)
    {
@@ -410,8 +416,14 @@ SDL_Surface * SDL_LoadBMP(const char *file)
 
 
    if(bmpinfo.biBitCount == 8){
-      printf("IN SDL LOAD BMP err deb:%d\n",bmpheader.bfOffBits);
       int lutsize;
+      unsigned coul;
+      unsigned *pix32;
+      unsigned short *pix16;
+      unsigned char *pix8;
+      long bufpos = 0;
+
+      printf("IN SDL LOAD BMP err deb:%d\n",bmpheader.bfOffBits);
 
       if(bmpinfo.biClrUsed!=0)lutsize=bmpinfo.biClrUsed*4;
       else lutsize=256*4;
@@ -427,7 +439,7 @@ SDL_Surface * SDL_LoadBMP(const char *file)
 
       fseek(fp,bmpheader.bfOffBits,  SEEK_SET);
 
-      unsigned char* Buffer = malloc(sizeof(char)*size);
+      Buffer = malloc(sizeof(char)*size);
 
       result= fread(Buffer, 1, size, fp);
       if(result!=size)
@@ -450,11 +462,9 @@ SDL_Surface * SDL_LoadBMP(const char *file)
       if(surf==NULL)printf("failed createRGBsurf\n");
       //printf("after createsurf\n");
 
-      unsigned coul;
-      unsigned *pix32=surf->pixels;
-      unsigned short *pix16=surf->pixels;
-      unsigned char *pix8=surf->pixels;
-      long bufpos = 0; 
+      pix32=surf->pixels;
+      pix16=surf->pixels;
+      pix8=surf->pixels;
 
       for ( y = 0; y < height; y++ )
          for ( x = 0; x < width; x++)
@@ -510,7 +520,7 @@ SDL_Surface * SDL_LoadBMP(const char *file)
 
    fseek(fp,bmpheader.bfOffBits,  SEEK_SET);
 
-   unsigned char* Buffer = malloc(sizeof(char)*size);
+   Buffer = malloc(sizeof(char)*size);
 
    result= fread(Buffer, 1, size, fp);
    if(result!=size)
@@ -526,20 +536,15 @@ SDL_Surface * SDL_LoadBMP(const char *file)
    if(surf==NULL)printf("failed createRGBsurf\n");
    //printf("IN SDL LOAD BMP after CreateRGBSurface\n");
 
-
-   int padding = 0;
-   int scanlinebytes = width * 3;
+   scanlinebytes = width * 3;
    while ( ( scanlinebytes + padding ) % 4 != 0 )     // DWORD = 4 bytes
       padding++;
    // get the padded scanline width
-   int psw = scanlinebytes + padding;
+   psw = scanlinebytes + padding;
 
    // now we loop trough all bytes of the original buffer, 
    // swap the R and B bytes and the scanlines
-   long bufpos = 0;   
-   long newpos = 0;
-   unsigned short coul;
-   unsigned short *pix=surf->pixels;
+   pix=surf->pixels;
 
    for ( y = 0; y < height; y++ )
       for ( x = 0; x < 3 * width; x+=3 )
