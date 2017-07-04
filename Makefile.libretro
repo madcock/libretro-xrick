@@ -194,7 +194,7 @@ ifneq (,$(findstring msvc,$(platform)))
 	LINKOUT = -out:
 	LD = link.exe
 else
-	LD = $(CXX)
+	LD = $(CC)
 endif
 
 all: $(TARGET)
@@ -202,7 +202,7 @@ $(TARGET): $(OBJECTS)
 ifeq ($(STATIC_LINKING_LINK),1)
 	$(AR) rcs $@ $(OBJECTS) 
 else
-	$(LD) $(fpic) $(SHARED) $(INCLUDES) $(LINKOUT)$@ $(OBJECTS) $(LIBS)
+	$(LD) $(fpic) $(LDFLAGS) $(SHARED) $(INCLUDES) $(LINKOUT)$@ $(OBJECTS) $(LIBS)
 endif
 
 %.o: %.c
