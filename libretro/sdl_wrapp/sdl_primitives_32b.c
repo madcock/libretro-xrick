@@ -182,6 +182,8 @@ void SDL_DrawString(SDL_Surface *surf, signed short int x, signed short int y,
    int k,strlen, col, bit, xrepeat, yrepeat, surfw, surfh;
    unsigned char *linesurf, b;
    signed  int ypixel;
+   unsigned  *yptr; 
+   unsigned  *mbuffer = NULL;
 
    if(string == NULL)
       return;
@@ -192,9 +194,7 @@ void SDL_DrawString(SDL_Surface *surf, signed short int x, signed short int y,
    surfw=strlen * 7 * xscale;
    surfh=8 * yscale;
 
-   unsigned  *mbuffer=(unsigned *)surf->pixels;
-   unsigned  *yptr; 
-
+   mbuffer=(unsigned *)surf->pixels;
    linesurf =malloc(sizeof(unsigned )*surfw*surfh );
    yptr = (unsigned *)&linesurf[0];
 
