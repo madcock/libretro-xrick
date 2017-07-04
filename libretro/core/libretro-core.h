@@ -8,7 +8,7 @@
 
 #include "SDL.h"
 
-#include <stdbool.h>
+#include <boolean.h>
 
 #define WINDOW_WIDTH  320
 #define WINDOW_HEIGHT 240
