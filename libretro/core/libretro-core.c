@@ -53,15 +53,14 @@ static retro_environment_t environ_cb;
 
 void retro_set_environment(retro_environment_t cb)
 {
-   environ_cb = cb;
-
    struct retro_variable variables[] = {
       { NULL, NULL },
    };
-
    bool no_content = true;
-   cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_content);
 
+   environ_cb = cb;
+
+   cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_content);
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
 }
 
