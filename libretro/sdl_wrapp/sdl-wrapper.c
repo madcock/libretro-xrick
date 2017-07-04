@@ -254,8 +254,8 @@ int Retro_SetColorKey(SDL_Surface *surface, Uint32 flag, Uint32 key)
 SDL_Surface *Retro_CreateRGBSurface( int w,int h, int d, int rm,int rg,int rb,int ra)
 {
    printf("s(%d,%d,%d) (%x,%x,%x,%x)\n",w,h,d,rm,rg,rb,ra);
-   SDL_Surface *bitmp;
-   bitmp = (SDL_Surface *) calloc(1, sizeof(*bitmp));
+   struct SDL_Surface *bitmp = NULL;
+   bitmp = (struct SDL_Surface *) calloc(1, sizeof(*bitmp));
    if (bitmp == NULL)
    {
       printf("tex surface failed");
