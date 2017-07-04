@@ -115,6 +115,8 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
 {
    SDL_Rect src,dst;
    int x,y,w;
+   unsigned char *pout = NULL;
+   unsigned char *pin  = NULL;
    int sBPP=ss->format->BytesPerPixel;
    int dBPP=ds->format->BytesPerPixel;
 
@@ -144,8 +146,8 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
       dst.h=dr->h;
    }
    //printf("s(%d,%d,%d,%d) d(%d,%d,%d,%d)\n",src.x,src.y,src.w,src.h,dst.x,dst.y,dst.w,dst.h);
-   unsigned char * pout=(unsigned char *)ds->pixels+(dst.x*dBPP+dst.y*ds->w*dBPP);
-   unsigned char * pin =(unsigned char *)ss->pixels+(src.x*sBPP+src.y*ss->w*sBPP);
+   pout=(unsigned char *)ds->pixels+(dst.x*dBPP+dst.y*ds->w*dBPP);
+   pin =(unsigned char *)ss->pixels+(src.x*sBPP+src.y*ss->w*sBPP);
 #if 1
    //COLORKEY
    if(ss->flags&SDL_SRCCOLORKEY)
