@@ -293,7 +293,7 @@ int SDL_SaveBMP(SDL_Surface *surface,const char *file){
 SDL_Surface * SDL_LoadBMP(const char *file)
 {
    int padding = 0;
-   int y, x, psw, scanlinebytes;;
+   int y, x, psw, scanlinebytes;
    int width,height,size;
    unsigned char fileh[40];
    SDL_Surface *surf;
