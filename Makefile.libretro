@@ -176,7 +176,12 @@ CXXFLAGS +=	$(CFLAGS) $(INCFLAGS) $(INCFLAGS_PLATFORM)
 CPPFLAGS += $(CFLAGS) $(INCFLAGS) $(INCFLAGS_PLATFORM)
 
 ifeq (,$(findstring msvc,$(platform)))
+CFLAGS += -DINLINE="inline"
+CXXFLAGS += -DINLINE="inline"
 LIBS := -lm
+else
+CFLAGS += -DINLINE="_inline"
+CXXFLAGS += -DINLINE="_inline"
 endif
 
 OBJECTS := $(SOURCES_C:.c=.o)

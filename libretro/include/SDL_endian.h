@@ -3,11 +3,11 @@
 //RETRO HACK
 #include "SDL.h"
 
-static __inline__ unsigned short SDL_Swap16(unsigned short x){
+static INLINE     unsigned short SDL_Swap16(unsigned short x){
 	unsigned short result= ((x<<8)|(x>>8)); 
 return result;
 }
-static __inline__ unsigned SDL_Swap32(unsigned x){
+static INLINE     unsigned SDL_Swap32(unsigned x){
 	unsigned result= ((x<<24)|((x<<8)&0x00FF0000)|((x>>8)&0x0000FF00)|(x>>24));
  return result;
 }
