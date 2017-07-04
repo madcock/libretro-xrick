@@ -78,9 +78,14 @@ void retro_reset(void)
 
 void retro_init(void)
 {    	
-   const char *system_dir  = NULL;
-   const char *content_dir = NULL;
-   const char *save_dir    = NULL;
+   const char *system_dir      = NULL;
+   const char *content_dir     = NULL;
+   const char *save_dir        = NULL;
+#ifdef FRONTEND_SUPPORTS_RGB565
+   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
+#else
+   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
+#endif
 
    // if defined, use the system directory			
    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
@@ -105,12 +110,6 @@ void retro_init(void)
    printf("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
    printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
    printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
-
-#ifdef FRONTEND_SUPPORTS_RGB565
-   enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
-#else
-   enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
-#endif
    
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
    {
