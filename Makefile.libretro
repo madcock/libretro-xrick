@@ -36,28 +36,28 @@ ifeq ($(platform), android)
    TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED :=  -Wl,--fix-cortex-a8 -llog --shared -Wl,--version-script=$(CORE_DIR)/libretro/core/link.T -Wl,--no-undefined
-   PLATFLAGS := -DAND -DALIGN_DWORD  -D__LIBRETRO__
+   PLATFLAGS := -DAND -DALIGN_DWORD
 
 else ifeq ($(platform), unix)
    CC = gcc
  TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED :=  -shared -Wl,--version-script=$(CORE_DIR)/libretro/core/link.T -Wl,--no-undefined
-   PLATFLAGS := -DALIGN_DWORD  -D__LIBRETRO__
+   PLATFLAGS := -DALIGN_DWORD
 
 # OS X
 else ifneq (,$(findstring osx,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
-   PLATFLAGS := -DALIGN_DWORD  -D__LIBRETRO__
+   PLATFLAGS := -DALIGN_DWORD
 
 # iOS
 else ifneq (,$(findstring ios,$(platform)))
    TARGET := $(TARGET_NAME)_libretro_ios.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
-   PLATFLAGS := -DALIGN_DWORD  -D__LIBRETRO__
+   PLATFLAGS := -DALIGN_DWORD
 
 # Nintendo Wii
 else ifeq ($(platform), wii)
@@ -70,7 +70,7 @@ else ifeq ($(platform), wii)
 	-DHAVE_ASPRINTF -I$(DEVKITPRO)/libogc/include \
 	-D__powerpc__ -D__POWERPC__ -DGEKKO -DHW_RVL -mrvl -mcpu=750 -meabi -mhard-float -D__ppc__ -DMSB_FIRST
    SHARED :=   -lm -lc
-   PLATFLAGS :=  -D__LIBRETRO__ -DALIGN_DWORD
+   PLATFLAGS := -DALIGN_DWORD
 	WANT_ZLIB=1
 	STATIC_LINKING=1
 	STATIC_LINKING_LINK=1
@@ -84,7 +84,7 @@ else ifeq ($(platform), ps3)
    SHARED :=   -lm -lc
    CFLAGS += -DSDL_BYTEORDER=SDL_BIG_ENDIAN -DMSB_FIRST -DBYTE_ORDER=BIG_ENDIAN  -DBYTE_ORDER=BIG_ENDIAN \
 	-D__CELLOS_LV2 -DHAVE_ASPRINTF -DMSB_FIRST
-   PLATFLAGS :=  -D__LIBRETRO__ -DALIGN_DWORD 
+   PLATFLAGS := -DALIGN_DWORD 
 	WANT_ZLIB=1
 	STATIC_LINKING=1
 	STATIC_LINKING_LINK=1
@@ -136,12 +136,32 @@ TARGET := $(TARGET_NAME)_libretro.dll
 PSS_STYLE :=2
 LDFLAGS += -DLL
 LIBS =
-   PLATFLAGS :=  -D__LIBRETRO__ -DALIGN_DWORD -DWIN32PORT -DWIN32
+   PLATFLAGS := -DALIGN_DWORD -DWIN32PORT -DWIN32
+
+# Windows MSVC 2005 x86
+else ifeq ($(platform), windows_msvc2005_x86)
+	CC  = cl.exe
+	CXX = cl.exe
+
+PATH := $(shell IFS=$$'\n'; cygpath "$(VS80COMNTOOLS)../../VC/bin"):$(PATH)
+PATH := $(PATH):$(shell IFS=$$'\n'; cygpath "$(VS80COMNTOOLS)../IDE")
+INCLUDE := $(shell IFS=$$'\n'; cygpath "$(VS80COMNTOOLS)../../VC/include")
+LIB := $(shell IFS=$$'\n'; cygpath -w "$(VS80COMNTOOLS)../../VC/lib")
+BIN := $(shell IFS=$$'\n'; cygpath "$(VS80COMNTOOLS)../../VC/bin")
+
+WindowsSdkDir := $(INETSDK)
+
+export INCLUDE := $(INCLUDE);$(INETSDK)/Include;libretro-common/include/compat/msvc
+export LIB := $(LIB);$(WindowsSdkDir);$(INETSDK)/Lib
+TARGET := $(TARGET_NAME)_libretro.dll
+PSS_STYLE :=2
+LDFLAGS += -DLL
+CFLAGS += -D_CRT_SECURE_NO_DEPRECATE
 
 # Windows
 else
 	CC = gcc
-   PLATFLAGS :=  -D__LIBRETRO__ -DALIGN_DWORD -DWIN32PORT -DWIN32
+   PLATFLAGS :=  -DALIGN_DWORD -DWIN32PORT -DWIN32
    TARGET := $(TARGET_NAME)_libretro.dll
    SHARED := -shared -static-libgcc -s -Wl,--version-script=$(CORE_DIR)/libretro/core/link.T -Wl,--no-undefined 
 endif
@@ -170,6 +190,8 @@ include $(CORE_DIR)/Makefile.common
 ifeq ($(STATIC_LINKING),1)
 CFLAGS   += -DSTATIC_LINKING
 endif
+
+INCFLAGS_PLATFORM += -D__LIBRETRO__
 
 CFLAGS   += $(INCFLAGS) $(INCFLAGS_PLATFORM)
 CXXFLAGS +=	$(CFLAGS) $(INCFLAGS) $(INCFLAGS_PLATFORM)
