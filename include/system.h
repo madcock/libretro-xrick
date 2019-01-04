@@ -44,13 +44,6 @@
 #pragma warning( disable : 4761 )
 #endif
 
-/*
- * Detect Microsoft Windows
- */
-#ifdef WIN32
-#define __WIN32__
-#endif
-
 /* there are true at least on x86 platforms */
 typedef unsigned char U8;         /*  8 bits unsigned */
 typedef unsigned short int U16;   /* 16 bits unsigned */
