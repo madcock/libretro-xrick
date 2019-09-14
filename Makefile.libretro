@@ -91,6 +91,13 @@ else ifneq (,$(findstring ios,$(platform)))
    SHARED := -dynamiclib
    PLATFLAGS := -DALIGN_DWORD
 
+# tvOS
+else ifeq ($(platform), tvos-arm64)
+   TARGET := $(TARGET_NAME)_libretro_tvos.dylib
+   fpic := -fPIC
+   SHARED := -dynamiclib
+   PLATFLAGS := -DALIGN_DWORD
+
 # Nintendo Wii
 else ifeq ($(platform), wii)
    TARGET := $(TARGET_NAME)_libretro_wii.a
