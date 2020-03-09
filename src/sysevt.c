@@ -31,7 +31,7 @@
 #define SETBIT(x,b) x |= (b)
 #define CLRBIT(x,b) x &= ~(b)
 
-char Key_Sate[512];
+extern char Key_Sate[512];
 static SDL_Event event;
 /*
  * Process an event
