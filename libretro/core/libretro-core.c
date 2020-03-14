@@ -202,7 +202,7 @@ bool retro_load_game(const struct retro_game_info *info)
 
 #ifdef FRONTEND_SUPPORTS_RGB565
    memset(Retro_Screen,0,WINDOW_WIDTH*WINDOW_HEIGHT*2);
-   SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT, 16, 0);
+   sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT, 16, 0);
 #else
    memset(Retro_Screen,0,WINDOW_WIDTH*WINDOW_HEIGHT*2*2);
    sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT ,32, 0);
