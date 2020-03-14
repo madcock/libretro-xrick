@@ -29,6 +29,7 @@ STATIC_LINKING_LINK=1
 endif
 endif
 
+#CFLAGS += -DFRONTEND_SUPPORTS_RGB565
 ifeq ($(platform), android)
    CC = arm-linux-androideabi-gcc
    AR = @arm-linux-androideabi-ar

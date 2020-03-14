@@ -157,7 +157,7 @@ void retro_get_system_info(struct retro_system_info *info)
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
    struct retro_game_geometry geom = { retrow, retroh, retrow, retrow,4.0 / 3.0 };
-   struct retro_system_timing timing = { 50.0, 22050.0 };
+   struct retro_system_timing timing = { 25.0, 22050.0 };
 
    info->geometry = geom;
    info->timing   = timing;
