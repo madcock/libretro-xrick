@@ -157,7 +157,7 @@ void retro_get_system_info(struct retro_system_info *info)
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
    struct retro_game_geometry geom = { retrow, retroh, retrow, retrow,4.0 / 3.0 };
-   struct retro_system_timing timing = { 50.0, 22050.0 };
+   struct retro_system_timing timing = { 25.0, 22050.0 };
 
    info->geometry = geom;
    info->timing   = timing;
@@ -202,7 +202,7 @@ bool retro_load_game(const struct retro_game_info *info)
 
 #ifdef FRONTEND_SUPPORTS_RGB565
    memset(Retro_Screen,0,WINDOW_WIDTH*WINDOW_HEIGHT*2);
-   SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT, 16, 0);
+   sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT, 16, 0);
 #else
    memset(Retro_Screen,0,WINDOW_WIDTH*WINDOW_HEIGHT*2*2);
    sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT ,32, 0);
