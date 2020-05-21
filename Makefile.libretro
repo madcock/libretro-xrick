@@ -43,7 +43,11 @@ else ifeq ($(platform), unix)
    CC = gcc
  TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
-   SHARED :=  -shared -Wl,--version-script=$(CORE_DIR)/libretro/core/link.T -Wl,--no-undefined
+   ifneq ($(findstring SunOS,$(shell uname -a)),)
+      SHARED := -shared -z defs -z gnu-version-script-compat
+   else
+      SHARED := -shared -Wl,--version-script=$(CORE_DIR)/libretro/core/link.T -Wl,--no-undefined
+   endif
    PLATFLAGS := -DALIGN_DWORD
 
 # Classic Platforms ####################
