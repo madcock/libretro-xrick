@@ -111,15 +111,8 @@ void retro_init(void)
    else
       sprintf(RETRO_DIR, "%s\0", retro_system_directory);
 
-   printf("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
-   printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
-   printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
-   
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
-   {
-      fprintf(stderr, "PIXEL FORMAT is not supported.\n");
       exit(0);
-   }
 
    memset(Key_Sate,0,512);
    memset(Key_Sate2,0,512);
@@ -192,7 +185,7 @@ void retro_run(void)
 
    game_iterate();
 
-   if(sdlscrn)
+   if (sdlscrn)
       video_cb(sdlscrn->pixels,retrow,retroh, retrow<< PIXEL_BYTES);
 }
 
