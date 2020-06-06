@@ -51,7 +51,6 @@ SOURCES_C := \
 	$(CORE_DIR)/src/dat_snd.c \
 	$(CORE_DIR)/libretro/core/soundplay.c \
 	$(CORE_DIR)/libretro/sdl_wrapp/sdl_primitives.c \
-	$(CORE_DIR)/libretro/sdl_wrapp/bmp.c \
 	$(CORE_DIR)/libretro/core/libretro-core.c \
 	$(CORE_DIR)/libretro/core/core-mapper.c
 

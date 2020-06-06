@@ -33,8 +33,6 @@ extern SDL_Surface *Retro_SetVideoMode(int w,int h,int b);
 extern void Retro_FreeSurface(SDL_Surface *surf );
 extern void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr);
 extern void Retro_Fillrect(SDL_Surface * surf,SDL_Rect *rect,unsigned int col);
-extern int SDL_SaveBMP(SDL_Surface *surface,const char *file);
-extern SDL_Surface * SDL_LoadBMP(const char *file);
 extern void Retro_GetRGB(int coul,SDL_PixelFormat *format, int *r,int *g,int *b);
 extern int Retro_SetColorKey(SDL_Surface *surface, Uint32 flag, Uint32 key);
 extern int Retro_SetColors(SDL_Surface *surface, SDL_Color *colors, int firstcolor, int ncolors);
