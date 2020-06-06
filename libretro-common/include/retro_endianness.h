@@ -31,38 +31,47 @@
 #define SWAP16 _byteswap_ushort
 #define SWAP32 _byteswap_ulong
 #else
-#define SWAP16(x) ((uint16_t)(                  \
-         (((uint16_t)(x) & 0x00ff) << 8)      | \
-         (((uint16_t)(x) & 0xff00) >> 8)        \
-          ))
-#define SWAP32(x) ((uint32_t)(           \
-         (((uint32_t)(x) & 0x000000ff) << 24) | \
-         (((uint32_t)(x) & 0x0000ff00) <<  8) | \
-         (((uint32_t)(x) & 0x00ff0000) >>  8) | \
-         (((uint32_t)(x) & 0xff000000) >> 24)   \
-         ))
+static INLINE uint16_t SWAP16(uint16_t x)
+{
+  return ((x & 0x00ff) << 8) |
+         ((x & 0xff00) >> 8);
+}
+
+static INLINE uint32_t SWAP32(uint32_t x)
+{
+  return ((x & 0x000000ff) << 24) |
+         ((x & 0x0000ff00) <<  8) |
+         ((x & 0x00ff0000) >>  8) |
+         ((x & 0xff000000) >> 24);
+}
+
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
-#define SWAP64(val)                                             \
-	((((uint64_t)(val) & 0x00000000000000ff) << 56)      \
-	 | (((uint64_t)(val) & 0x000000000000ff00) << 40)    \
-	 | (((uint64_t)(val) & 0x0000000000ff0000) << 24)    \
-	 | (((uint64_t)(val) & 0x00000000ff000000) << 8)     \
-	 | (((uint64_t)(val) & 0x000000ff00000000) >> 8)     \
-	 | (((uint64_t)(val) & 0x0000ff0000000000) >> 24)    \
-	 | (((uint64_t)(val) & 0x00ff000000000000) >> 40)    \
-	 | (((uint64_t)(val) & 0xff00000000000000) >> 56))
+static INLINE uint64_t SWAP64(uint64_t val)
+{
+  return
+      ((val & 0x00000000000000ff) << 56)
+    | ((val & 0x000000000000ff00) << 40)
+    | ((val & 0x0000000000ff0000) << 24)
+    | ((val & 0x00000000ff000000) << 8)
+    | ((val & 0x000000ff00000000) >> 8)
+    | ((val & 0x0000ff0000000000) >> 24)
+    | ((val & 0x00ff000000000000) >> 40)
+    | ((val & 0xff00000000000000) >> 56);
+}
 #else
-#define SWAP64(val)                                             \
-	((((uint64_t)(val) & 0x00000000000000ffULL) << 56)      \
-	 | (((uint64_t)(val) & 0x000000000000ff00ULL) << 40)    \
-	 | (((uint64_t)(val) & 0x0000000000ff0000ULL) << 24)    \
-	 | (((uint64_t)(val) & 0x00000000ff000000ULL) << 8)     \
-	 | (((uint64_t)(val) & 0x000000ff00000000ULL) >> 8)     \
-	 | (((uint64_t)(val) & 0x0000ff0000000000ULL) >> 24)    \
-	 | (((uint64_t)(val) & 0x00ff000000000000ULL) >> 40)    \
-	 | (((uint64_t)(val) & 0xff00000000000000ULL) >> 56))
+static INLINE uint64_t SWAP64(uint64_t val)
+{
+  return   ((val & 0x00000000000000ffULL) << 56)
+	 | ((val & 0x000000000000ff00ULL) << 40)
+	 | ((val & 0x0000000000ff0000ULL) << 24)
+	 | ((val & 0x00000000ff000000ULL) << 8)
+	 | ((val & 0x000000ff00000000ULL) >> 8)
+	 | ((val & 0x0000ff0000000000ULL) >> 24)
+	 | ((val & 0x00ff000000000000ULL) >> 40)
+         | ((val & 0xff00000000000000ULL) >> 56);
+}
 #endif
 
 
@@ -73,30 +82,26 @@
 #endif
 
 #ifdef _MSC_VER
-#  include <winsock2.h>
-#  include <sys/param.h>
+#include <winsock2.h>
 #endif
 
-#if defined (BYTE_ORDER) && defined (BIG_ENDIAN) && defined (LITTLE_ENDIAN)
-#  if BYTE_ORDER == BIG_ENDIAN
-#    define MSB_FIRST 1
-#  elif BYTE_ORDER == LITTLE_ENDIAN
-#    define LSB_FIRST 1
-#  else
-#    error "Invalid endianness macros"
-#  endif
-#elif defined (__BYTE_ORDER__) && defined (__ORDER_BIG_ENDIAN__) && defined (__ORDER_LITTLE_ENDIAN__)
-#  if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#    define MSB_FIRST 1
-#  elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#    define LSB_FIRST 1
-#  else
-#    error "Invalid endianness macros"
-#  endif
-#elif defined (__i386__) || defined(__x86_64__)
-#  define LSB_FIRST 1
+#ifdef _MSC_VER
+#if _M_IX86 || _M_AMD64 || _M_ARM || _M_ARM64
+#define LSB_FIRST 1
+#elif _M_PPC
+#define MSB_FIRST 1
 #else
-#  error "Unknown platform"
+/* MSVC can run on _M_ALPHA and _M_IA64 too, but they're both bi-endian; need to find what mode MSVC runs them at */
+#error "unknown platform, can't determine endianness"
+#endif
+#else
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define MSB_FIRST 1
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define LSB_FIRST 1
+#else
+#error "Invalid endianness macros"
+#endif
 #endif
 
 #if defined(MSB_FIRST) && defined(LSB_FIRST)
@@ -258,7 +263,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 16-bit value from system to little-endian.
  *
- * Returns: Little-endian represantation of val.
+ * Returns: Little-endian representation of val.
  **/
 
 #define retro_cpu_to_le16(val) swap_if_big16(val)
@@ -269,7 +274,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 32-bit value from system to little-endian.
  *
- * Returns: Little-endian represantation of val.
+ * Returns: Little-endian representation of val.
  **/
 
 #define retro_cpu_to_le32(val) swap_if_big32(val)
@@ -280,7 +285,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 64-bit value from system to little-endian.
  *
- * Returns: Little-endian represantation of val.
+ * Returns: Little-endian representation of val.
  **/
 
 #define retro_cpu_to_le64(val) swap_if_big64(val)
@@ -291,7 +296,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 16-bit value from little-endian to native.
  *
- * Returns: Native represantation of little-endian val.
+ * Returns: Native representation of little-endian val.
  **/
 
 #define retro_le_to_cpu16(val) swap_if_big16(val)
@@ -302,7 +307,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 32-bit value from little-endian to native.
  *
- * Returns: Native represantation of little-endian val.
+ * Returns: Native representation of little-endian val.
  **/
 
 #define retro_le_to_cpu32(val) swap_if_big32(val)
@@ -313,7 +318,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 64-bit value from little-endian to native.
  *
- * Returns: Native represantation of little-endian val.
+ * Returns: Native representation of little-endian val.
  **/
 
 #define retro_le_to_cpu64(val) swap_if_big64(val)
@@ -324,7 +329,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 16-bit value from system to big-endian.
  *
- * Returns: Big-endian represantation of val.
+ * Returns: Big-endian representation of val.
  **/
 
 #define retro_cpu_to_be16(val) swap_if_little16(val)
@@ -335,7 +340,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 32-bit value from system to big-endian.
  *
- * Returns: Big-endian represantation of val.
+ * Returns: Big-endian representation of val.
  **/
 
 #define retro_cpu_to_be32(val) swap_if_little32(val)
@@ -346,7 +351,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 64-bit value from system to big-endian.
  *
- * Returns: Big-endian represantation of val.
+ * Returns: Big-endian representation of val.
  **/
 
 #define retro_cpu_to_be64(val) swap_if_little64(val)
@@ -357,7 +362,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 16-bit value from big-endian to native.
  *
- * Returns: Native represantation of big-endian val.
+ * Returns: Native representation of big-endian val.
  **/
 
 #define retro_be_to_cpu16(val) swap_if_little16(val)
@@ -368,7 +373,7 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 32-bit value from big-endian to native.
  *
- * Returns: Native represantation of big-endian val.
+ * Returns: Native representation of big-endian val.
  **/
 
 #define retro_be_to_cpu32(val) swap_if_little32(val)
@@ -379,13 +384,13 @@ static INLINE uint32_t load32be(const uint32_t *addr)
  *
  * Convert unsigned 64-bit value from big-endian to native.
  *
- * Returns: Native represantation of big-endian val.
+ * Returns: Native representation of big-endian val.
  **/
 
 #define retro_be_to_cpu64(val) swap_if_little64(val)
 
 #ifdef  __GNUC__
-/* This attribute means that the same memory may be refferred through
+/* This attribute means that the same memory may be referred through
    pointers to different size of the object (aliasing). E.g. that u8 *
    and u32 * may actually be pointing to the same object.  */
 #define MAY_ALIAS  __attribute__((__may_alias__))
@@ -423,7 +428,7 @@ typedef struct retro_unaligned_uint64_s retro_unaligned_uint64_t;
  *
  * Convert unsigned unaligned 16-bit value from big-endian to native.
  *
- * Returns: Native represantation of big-endian val.
+ * Returns: Native representation of big-endian val.
  **/
 
 static INLINE uint16_t retro_get_unaligned_16be(void *addr) {
@@ -436,7 +441,7 @@ static INLINE uint16_t retro_get_unaligned_16be(void *addr) {
  *
  * Convert unsigned unaligned 32-bit value from big-endian to native.
  *
- * Returns: Native represantation of big-endian val.
+ * Returns: Native representation of big-endian val.
  **/
 
 static INLINE uint32_t retro_get_unaligned_32be(void *addr) {
@@ -449,7 +454,7 @@ static INLINE uint32_t retro_get_unaligned_32be(void *addr) {
  *
  * Convert unsigned unaligned 64-bit value from big-endian to native.
  *
- * Returns: Native represantation of big-endian val.
+ * Returns: Native representation of big-endian val.
  **/
 
 static INLINE uint64_t retro_get_unaligned_64be(void *addr) {
@@ -462,7 +467,7 @@ static INLINE uint64_t retro_get_unaligned_64be(void *addr) {
  *
  * Convert unsigned unaligned 16-bit value from little-endian to native.
  *
- * Returns: Native represantation of little-endian val.
+ * Returns: Native representation of little-endian val.
  **/
 
 static INLINE uint16_t retro_get_unaligned_16le(void *addr) {
@@ -475,7 +480,7 @@ static INLINE uint16_t retro_get_unaligned_16le(void *addr) {
  *
  * Convert unsigned unaligned 32-bit value from little-endian to native.
  *
- * Returns: Native represantation of little-endian val.
+ * Returns: Native representation of little-endian val.
  **/
 
 static INLINE uint32_t retro_get_unaligned_32le(void *addr) {
@@ -488,7 +493,7 @@ static INLINE uint32_t retro_get_unaligned_32le(void *addr) {
  *
  * Convert unsigned unaligned 64-bit value from little-endian to native.
  *
- * Returns: Native represantation of little-endian val.
+ * Returns: Native representation of little-endian val.
  **/
 
 static INLINE uint64_t retro_get_unaligned_64le(void *addr) {
