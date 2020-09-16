@@ -51,6 +51,8 @@ retro_audio_sample_t audio_cb;
 static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
 
+bool libretro_supports_bitmasks = false;
+
 void retro_set_environment(retro_environment_t cb)
 {
    struct retro_variable variables[] = {
@@ -118,11 +120,16 @@ void retro_init(void)
    memset(Key_Sate2,0,512);
 
    texture_init();
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_INPUT_BITMASKS, NULL))
+      libretro_supports_bitmasks = true;
 }
 
 void retro_deinit(void)
 {	 
    texture_uninit();
+
+   libretro_supports_bitmasks = false;
 }
 
 unsigned retro_api_version(void)
