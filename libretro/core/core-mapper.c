@@ -221,35 +221,47 @@ int SurfaceFormat=3;
 
 int Retro_PollEvent(void)
 {
+   extern bool libretro_supports_bitmasks;
+   unsigned int i;
+   unsigned joypad_bits;
    unsigned short key = 0;
 
    input_poll_cb();
 
+   if (libretro_supports_bitmasks)
+      joypad_bits = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
+   else
+   {
+      joypad_bits = 0;
+      for (i = 0; i < (RETRO_DEVICE_ID_JOYPAD_R3+1); i++)
+         joypad_bits |= input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ? (1 << i) : 0;
+   }
+
    key           = SDLK_UP;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_UP) ? 0x80: 0;
    key_latch(key);
    key           = SDLK_DOWN;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_DOWN) ? 0x80: 0;
    key_latch(key);
    key           = SDLK_LEFT;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT) ? 0x80: 0;
    key_latch(key);
    key           = SDLK_RIGHT;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT) ? 0x80: 0;
    key_latch(key);
 
    key           = SDLK_p;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_START) ? 0x80: 0;
    key_latch(key);
 
 #if 0
    key           = SDLK_e;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_SELECT) ? 0x80: 0;
    key_latch(key);
 #endif
 
    key           = SDLK_SPACE;
-   Key_Sate[key] = input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A) ? 0x80: 0;
+   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_A) ? 0x80: 0;
    key_latch(key);
 
 
