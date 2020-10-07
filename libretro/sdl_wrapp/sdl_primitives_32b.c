@@ -231,7 +231,6 @@ void SDL_DrawString(SDL_Surface *surf, signed short int x, signed short int y,
    free(linesurf);
 }
 
-
 void SDL_Draw_text(SDL_Surface *buffer,int x,int y,unsigned  fgcol,
       unsigned  int bgcol ,int scalex,int scaley , int max,char *string, ...)
 {
@@ -248,9 +247,3 @@ void SDL_Draw_text(SDL_Surface *buffer,int x,int y,unsigned  fgcol,
 
    SDL_DrawString(buffer, x,y, text,max, scalex, scaley,fgcol,bgcol);	
 }
-
-
-
-
-
-
