@@ -218,6 +218,7 @@ else ifeq ($(platform), vita)
 	AR = arm-vita-eabi-ar$(EXE_EXT)
 	CFLAGS += -DVITA
 	STATIC_LINKING = 1
+	STATIC_LINKING_LINK=1
 
 # Windows MSVC 2010 x64
 else ifeq ($(platform), windows_msvc2010_x64)
