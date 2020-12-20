@@ -9,10 +9,15 @@ extern const char *retro_content_directory;
 char RETRO_DIR[512];
  
 //TIME
-#ifdef __CELLOS_LV2__
-#include "sys/sys_time.h"
-#include "sys/timer.h"
+#ifdef __PS3__
+#ifdef __PSL1GHT__
+#include <sys/systime.h>
+#else
+#include <sys/sys_time.h>
+#include <sys/timer.h>
 #define usleep  sys_timer_usleep
+#define sysGetCurrentTime sys_time_get_current_time
+#endif
 #elif defined(_WIN32)
 #include <windows.h>
 #include <mmsystem.h>
@@ -86,15 +91,12 @@ long GetTicks(void)
 #else
 #ifndef _ANDROID_
 
-#ifdef __CELLOS_LV2__
-
-   //#warning "GetTick PS3\n"
-
+#ifdef __PS3__
    unsigned long	ticks_micro;
    uint64_t secs;
    uint64_t nsecs;
 
-   sys_time_get_current_time(&secs, &nsecs);
+   sysGetCurrentTime(&secs, &nsecs);
    ticks_micro =  secs * 1000000UL + (nsecs / 1000);
 
    return ticks_micro/1000;

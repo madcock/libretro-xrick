@@ -1,5 +1,5 @@
 #ifdef __LIBRETRO__
-#if defined(ANDROID) || defined(__CELLOS_LV2__)
+#if defined(ANDROID) || defined(__PS3__)
 #undef HAVE_POSIX_MEMALIGN
 #else
 #define HAVE_POSIX_MEMALIGN 1
