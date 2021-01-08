@@ -25,7 +25,10 @@ include:
   # Linux 64-bit
   - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-x64.yml'
-    
+
+  # Linux 32-bit
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/linux-i686.yml'
 
   # MacOS 64-bit
   - project: 'libretro-infrastructure/ci-templates'
@@ -35,7 +38,11 @@ include:
   # Android
   - project: 'libretro-infrastructure/ci-templates'
     file: '/android-jni.yml'
-    
+
+  # iOS 9
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ios9.yml'
+
   ################################## CONSOLES ################################
   # Nintendo 3DS
   - project: 'libretro-infrastructure/ci-templates'
@@ -48,6 +55,11 @@ include:
   # PlayStation Vita
   - project: 'libretro-infrastructure/ci-templates'
     file: '/vita-static.yml'
+
+  #################################### MISC ##################################
+  # Emscripten
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/emscripten-static.yml'
 
 # Stages for building
 stages:
@@ -76,6 +88,12 @@ libretro-build-windows-i686:
 libretro-build-linux-x64:
   extends:
     - .libretro-linux-x64-make-default
+    - .core-defs
+
+# Linux 32-bit
+libretro-build-linux-i686:
+  extends:
+    - .libretro-linux-i686-make-default
     - .core-defs
 
 # MacOS 64-bit
@@ -109,6 +127,12 @@ android-x86:
     - .libretro-android-jni-x86
     - .core-defs
 
+# iOS 9
+libretro-build-ios-9:
+  extends:
+    - .libretro-ios9-make-default
+    - .core-defs
+
 ################################### CONSOLES #################################
 # Nintendo 3DS
 libretro-build-ctr:
@@ -126,4 +150,11 @@ libretro-build-libnx-aarch64:
 libretro-build-vita:
   extends:
     - .libretro-vita-static-retroarch-master
+    - .core-defs
+
+#################################### MISC ##################################
+# Emscripten
+libretro-build-emscripten:
+  extends:
+    - .libretro-emscripten-static-retroarch-master
     - .core-defs
