@@ -17,11 +17,11 @@ include:
   # Windows 64-bit
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-x64-mingw.yml'
-    
+
   # Windows 32-bit
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-i686-mingw.yml'
-    
+
   # Linux 64-bit
   - project: 'libretro-infrastructure/ci-templates'
     file: '/linux-x64.yml'
@@ -47,11 +47,15 @@ include:
   # Nintendo 3DS
   - project: 'libretro-infrastructure/ci-templates'
     file: '/ctr-static.yml'
-    
+
+  # Nintendo Wii
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/wii-static.yml'
+
   # Nintendo Switch
   - project: 'libretro-infrastructure/ci-templates'
     file: '/libnx-static.yml'
-    
+
   # PlayStation Vita
   - project: 'libretro-infrastructure/ci-templates'
     file: '/vita-static.yml'
@@ -77,13 +81,13 @@ libretro-build-windows-x64:
   extends:
     - .libretro-windows-x64-mingw-make-default
     - .core-defs
-    
+
 # Windows 32-bit
 libretro-build-windows-i686:
   extends:
     - .libretro-windows-i686-mingw-make-default
     - .core-defs
-    
+
 # Linux 64-bit
 libretro-build-linux-x64:
   extends:
@@ -140,12 +144,18 @@ libretro-build-ctr:
     - .libretro-ctr-static-retroarch-master
     - .core-defs
 
+# Nintendo Wii
+libretro-build-wii:
+  extends:
+    - .libretro-wii-static-retroarch-master
+    - .core-defs
+
 # Nintendo Switch
 libretro-build-libnx-aarch64:
   extends:
     - .libretro-libnx-static-retroarch-master
     - .core-defs
-    
+
 # PlayStation Vita
 libretro-build-vita:
   extends:
