@@ -423,6 +423,14 @@ else
    CFLAGS += -O2 -DNDEBUG
 endif
 
+ifneq (,$(findstring msvc,$(platform)))
+ifeq ($(DEBUG),1)
+   CFLAGS += -MTd
+else
+   CFLAGS += -MT
+endif
+endif
+
 ifeq ($(WANT_ZLIB), 1)
 CFLAGS += -DWANT_ZLIB
 endif
