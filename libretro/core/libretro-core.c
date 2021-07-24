@@ -150,8 +150,7 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_version  = "021212-Dev";
    info->valid_extensions = "*|zip";
    info->need_fullpath    = true;
-   info->block_extract = false;
-
+   info->block_extract    = true;
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
