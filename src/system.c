@@ -45,27 +45,6 @@ sys_panic(char *err, ...)
   exit(1);
 }
 
-
-/*
- * Print a message
- */
-void
-sys_printf(char *msg, ...)
-{
-  va_list argptr;
-  char s[1024];
-
-  /* change stdin to non blocking */
-  /*fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);*/
-  /* NOTE HPUX: use ... is it OK on Linux ? */
-  /* fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) & ~O_NDELAY); */
-
-  /* prepare message */
-  va_start(argptr, msg);
-  vsprintf(s, msg, argptr);
-  va_end(argptr);
-}
-
 /*
  * Return number of microseconds elapsed since first call
  */

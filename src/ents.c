@@ -290,8 +290,6 @@ ent_addrect(S16 x, S16 y, U16 width, U16 height)
   S16 x0, y0;
   U16 w0, h0;
 
-  /*sys_printf("rect %#04x,%#04x %#04x %#04x ", x, y, width, height);*/
-
   /* align to tiles */
   x0 = x & 0xfff8;
   y0 = y & 0xfff8;
@@ -301,12 +299,8 @@ ent_addrect(S16 x, S16 y, U16 width, U16 height)
   if (y - y0) h0 = (h0 + (y - y0)) | 0x0007;
 
   /* clip */
-  if (draw_clipms(&x0, &y0, &w0, &h0)) {  /* do not add if fully clipped */
-    /*sys_printf("-> [clipped]\n");*/
+  if (draw_clipms(&x0, &y0, &w0, &h0))  /* do not add if fully clipped */
     return;
-  }
-
-  /*sys_printf("-> %#04x,%#04x %#04x %#04x\n", x0, y0, w0, h0);*/
 
 #ifdef GFXST
   y0 += 8;
@@ -343,8 +337,6 @@ ent_draw(void)
   /* reset rectangles list */
   rects_free(ent_rects);
   ent_rects = NULL;
-
-  /*sys_printf("\n");*/
 
   /*
    * background loop : erase all entities that were visible
@@ -492,16 +484,6 @@ void
 ent_action(void)
 {
   U8 i, k;
-
-  for (i = 0; ent_ents[i].n != 0xff; i++)
-  {
-     if (ent_ents[i].n)
-     {
-        sys_printf("xrick/ents: slot %#04x, entity %#04x", i, ent_ents[i].n);
-        sys_printf(" (%#06x, %#06x), sprite %#04x.\n",
-              ent_ents[i].x, ent_ents[i].y, ent_ents[i].sprite);
-     }
-  }
 
   for (i = 0; ent_ents[i].n != 0xff; i++)
   {

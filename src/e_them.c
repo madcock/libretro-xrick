@@ -343,8 +343,6 @@ e_them_t2_action2(U8 e)
   static U16 *sl = (U16 *)&e_them_rndseed;
   static U16 *sh = (U16 *)&e_them_rndseed + 2;
 
-  /*sys_printf("e_them_t2 ------------------------------\n");*/
-
   /* latency: if not zero then decrease */
   if (ent_ents[e].latency > 0) ent_ents[e].latency--;
 
@@ -352,8 +350,6 @@ e_them_t2_action2(U8 e)
   if (ent_ents[e].flgclmb != TRUE) goto climbing_not;
 
   /* CLIMBING */
-
-  /*sys_printf("e_them_t2 climbing\n");*/
 
   /* latency: if not zero then return */
   if (ent_ents[e].latency > 0) return;
@@ -404,8 +400,6 @@ e_them_t2_action2(U8 e)
     /* NOT CLIMBING */
 
  climbing_not:
-    /*sys_printf("e_them_t2 climbing NOT\n");*/
-
     ent_ents[e].flgclmb = FALSE;  /* not climbing */
 
     /* calc new y (falling) and test environment */
@@ -413,7 +407,6 @@ e_them_t2_action2(U8 e)
     y = i >> 8;
     u_envtest(ent_ents[e].x, y, FALSE, &env0, &env1);
     if (!(env1 & (MAP_EFLG_SOLID|MAP_EFLG_SPAD|MAP_EFLG_WAYUP))) {
-      /*sys_printf("e_them_t2 y move OK\n");*/
       /* can go there */
       if (env1 & MAP_EFLG_LETHAL) {
 	e_them_gozombie(e);
@@ -433,13 +426,11 @@ e_them_t2_action2(U8 e)
 	return;
       }
       if (((ent_ents[e].x & 0x07) == 0x04) && (y < E_RICK_ENT.y)) {
-	/*sys_printf("e_them_t2 climbing00\n");*/
 	ent_ents[e].flgclmb = TRUE;  /* climbing */
 	return;
       }
     }
 
-    /*sys_printf("e_them_t2 ymove nok or ...\n");*/
     /* can't go there, or ... */
     ent_ents[e].y = (ent_ents[e].y & 0xf8) | 0x03;  /* align to ground */
     ent_ents[e].offsy = 0x0100;
@@ -449,7 +440,6 @@ e_them_t2_action2(U8 e)
     if ((env1 & MAP_EFLG_CLIMB) &&
 	((ent_ents[e].x & 0x0e) == 0x04) &&
 	(ent_ents[e].y > E_RICK_ENT.y)) {
-      /*sys_printf("e_them_t2 climbing01\n");*/
       ent_ents[e].flgclmb = TRUE;  /* climbing */
       return;
     }
@@ -458,14 +448,12 @@ e_them_t2_action2(U8 e)
     ent_ents[e].sprite = ent_ents[e].sprbase +
       ent_sprseq[(ent_ents[e].offsx < 0 ? 4 : 0) +
 		((ent_ents[e].x & 0x0e) >> 3)];
-    /*sys_printf("e_them_t2 sprite %02x\n", ent_ents[e].sprite);*/
 
 
     /* */
     if (ent_ents[e].offsx == 0)
       ent_ents[e].offsx = 2;
     x = ent_ents[e].x + ent_ents[e].offsx;
-    /*sys_printf("e_them_t2 xmove x=%02x\n", x);*/
     if (x < 0xe8) {
       u_envtest(x, ent_ents[e].y, FALSE, &env0, &env1);
       if (!(env1 & (MAP_EFLG_VERT|MAP_EFLG_SOLID|MAP_EFLG_SPAD|MAP_EFLG_WAYUP))) {
@@ -497,7 +485,6 @@ e_them_t2_action2(U8 e)
     }
 
     /* U-turn */
-    /*sys_printf("e_them_t2 u-turn\n");*/
     if (ent_ents[e].offsx == 0)
       ent_ents[e].offsx = 2;
     else

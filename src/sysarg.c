@@ -18,8 +18,6 @@
 #include <stdlib.h>  /* atoi */
 #include <string.h>  /* strcasecmp */
 
-#include <SDL.h>
-
 #include "system.h"
 #include "config.h"
 #include "game.h"

@@ -96,7 +96,6 @@ map_expand(void)
 void
 map_init(void)
 {
-  /*sys_printf("xrick/map_init: map=%#04x submap=%#04x\n", g_map, game_submap);*/
 #ifdef GFXPC
   draw_filter = 0xffff;
   map_tilesBank = (map_submaps[game_submap].page == 1) ? 3 : 2;
