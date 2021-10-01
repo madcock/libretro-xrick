@@ -38,11 +38,43 @@ typedef struct {
 static path_t path;
 
 /*
- * Prototypes
+ * Returns 1 if filename has .zip extension.
  */
-static int str_zipext(char *);
-static char *str_dup(char *);
-static char *str_slash(char *);
+static int str_zipext(char *name)
+{
+	int i = strlen(name) - 1;
+	if (i < 0 || name[i] != 'p' && name[i] != 'P') return 0;
+	i--;
+	if (i < 0 || name[i] != 'i' && name[i] != 'I') return 0;
+	i--;
+	if (i < 0 || name[i] != 'z' && name[i] != 'Z') return 0;
+	i--;
+	if (i < 0 || name[i] != '.') return 0;
+	i--;
+	if (i < 0)
+		return 0;
+	return 1;
+}
+
+static char *str_dup(char *s)
+{
+	int i    = strlen(s) + 1;
+	char *s1 = malloc(i);
+	strncpy(s1, s, i);
+	return s1;
+}
+
+static char *str_slash(char *s)
+{
+#ifdef __WIN32__
+	int i, l;
+
+	l = strlen(s);
+	for (i = 0; i < l; i++)
+		if (s[i] == '/') s[i] = '\\';
+#endif
+	return s;
+}
 
 /*
  *
@@ -75,10 +107,10 @@ data_setpath(char *name)
 /*
  *
  */
-void
-data_closepath()
+void data_closepath(void)
 {
-	if (path.zip) {
+	if (path.zip)
+	{
 		unzClose(path.zip);
 		path.zip = NULL;
 	}
@@ -89,8 +121,7 @@ data_closepath()
 /*
  * Open a data file.
  */
-data_file_t *
-data_file_open(char *name)
+data_file_t *data_file_open(char *name)
 {
 	char *n;
 	FILE *fh;
@@ -115,13 +146,11 @@ data_file_open(char *name)
 	}
 }
 
-int
-data_file_size(data_file_t *file)
+int data_file_size(data_file_t *file)
 {
 	int s;
-	if (path.zip) {
-		/* not implemented */
-	} else {
+	if (!path.zip)
+	{
 		fseek((FILE *)file, 0, SEEK_END);
 		s = ftell((FILE *)file);
 		fseek((FILE *)file, 0, SEEK_SET);
@@ -132,29 +161,23 @@ data_file_size(data_file_t *file)
 /*
  * Seek.
  */
-int
-data_file_seek(data_file_t *file, long offset, int origin)
+int data_file_seek(data_file_t *file, long offset, int origin)
 {
-	if (path.zip) {
-		/* not implemented */
+	/* not implemented */
+	if (path.zip)
 		return -1;
-	} else {
-		return fseek((FILE *)file, offset, origin);
-	}
+	return fseek((FILE *)file, offset, origin);
 }
 
 /*
  * Tell.
  */
-int
-data_file_tell(data_file_t *file)
+int data_file_tell(data_file_t *file)
 {
-	if (path.zip) {
-		/* not implemented */
+	/* not implemented */
+	if (path.zip)
 		return -1;
-	} else {
-		return ftell((FILE *)file);
-	}
+	return ftell((FILE *)file);
 }
 
 /*
@@ -163,11 +186,9 @@ data_file_tell(data_file_t *file)
 int
 data_file_read(data_file_t *file, void *buf, size_t size, size_t count)
 {
-	if (path.zip) {
+	if (path.zip)
 		return unzReadCurrentFile(((zipped_t *)file)->zip, buf, size * count) / size;
-	} else {
-		return fread(buf, size, count, (FILE *)file);
-	}
+	return fread(buf, size, count, (FILE *)file);
 }
 
 /*
@@ -176,63 +197,13 @@ data_file_read(data_file_t *file, void *buf, size_t size, size_t count)
 void
 data_file_close(data_file_t *file)
 {
-	if (path.zip) {
+	if (path.zip)
+	{
 		unzClose(((zipped_t *)file)->zip);
 		((zipped_t *)file)->zip = NULL;
 		free(((zipped_t *)file)->name);
 		((zipped_t *)file)->name = NULL;
-	} else {
-		fclose((FILE *)file);
 	}
+	else
+		fclose((FILE *)file);
 }
-
-/*
- * Returns 1 if filename has .zip extension.
- */
-static int
-str_zipext(char *name)
-{
-	int i;
-
-	i = strlen(name) - 1;
-	if (i < 0 || name[i] != 'p' && name[i] != 'P') return 0;
-	i--;
-	if (i < 0 || name[i] != 'i' && name[i] != 'I') return 0;
-	i--;
-	if (i < 0 || name[i] != 'z' && name[i] != 'Z') return 0;
-	i--;
-	if (i < 0 || name[i] != '.') return 0;
-	i--;
-	if (i < 0) return 0;
-	return 1;
-}
-
-/*
- *
- */
-static char *
-str_dup(char *s)
-{
-	char *s1;
-	int i;
-
-	i = strlen(s) + 1;
-	s1 = malloc(i);
-	strncpy(s1, s, i);
-	return s1;
-}
-
-static char *
-str_slash(char *s)
-{
-#ifdef __WIN32__
-	int i, l;
-
-	l = strlen(s);
-	for (i = 0; i < l; i++)
-		if (s[i] == '/') s[i] = '\\';
-#endif
-	return s;
-}
-
-/* eof */
