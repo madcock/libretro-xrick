@@ -15,7 +15,6 @@ char RETRO_DIR[512];
 #else
 #include <sys/sys_time.h>
 #include <sys/timer.h>
-#define usleep  sys_timer_usleep
 #define sysGetCurrentTime sys_time_get_current_time
 #endif
 #elif defined(_WIN32)

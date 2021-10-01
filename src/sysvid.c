@@ -26,11 +26,9 @@
 #endif
 
 U8 *sysvid_fb; /* frame buffer */
-rect_t SCREENRECT = {0, 0, SYSVID_WIDTH, SYSVID_HEIGHT, NULL}; /* whole fb */
 
 static SDL_Color palette[256];
 static SDL_Surface *screen;
-static U32 videoFlags;
 
 #include "img_icon.e"
 
@@ -107,23 +105,13 @@ void sysvid_setGamePalette(void)
  */
 void sysvid_init(void)
 {
-   SDL_Surface *s;
-   U8 *mask, tpix;
-   U32 len, i;
-
-   /* SDL */
-   if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) < 0)
-      sys_panic("xrick/video: could not init SDL\n");
    /* video modes and screen */
-   videoFlags = SDL_HWSURFACE|SDL_HWPALETTE;
-   screen     = SDL_CreateRGBSurface( videoFlags, SYSVID_WIDTH, SYSVID_HEIGHT, 8 , 0x00ff0000,0x0000ff00,0xff,0xff000000);
+   screen     = SDL_CreateRGBSurface( SDL_HWSURFACE | SDL_HWPALETTE, SYSVID_WIDTH, SYSVID_HEIGHT, 8 , 0x00ff0000,0x0000ff00,0xff,0xff000000);
 
    /*
     * create v_ frame buffer
     */
    sysvid_fb = malloc(SYSVID_WIDTH * SYSVID_HEIGHT);
-   if (!sysvid_fb)
-      sys_panic("xrick/video: sysvid_fb malloc failed\n");
 }
 
 /*
@@ -134,8 +122,6 @@ void sysvid_shutdown(void)
    if (sysvid_fb)
       free(sysvid_fb);
    sysvid_fb = NULL;
-
-   SDL_Quit();
 }
 
 extern SDL_Surface *sdlscrn; 
@@ -151,15 +137,11 @@ void blit(void)
  */
 void sysvid_update(rect_t *rects)
 {
-   static SDL_Rect area;
-   U16 x, y, xz, yz;
+   U16 x, y;
    U8 *p, *q, *p0, *q0;
 
    if (!rects)
       return;
-
-   if (SDL_LockSurface(screen) == -1)
-      sys_panic("xrick/panic: SDL_LockSurface failed\n");
 
    while (rects)
    {
@@ -170,34 +152,20 @@ void sysvid_update(rect_t *rects)
 
       for (y = rects->y; y < rects->y + rects->height; y++)
       {
-         for (yz = 0; yz < 1; yz++)
+         p = p0;
+         q = q0;
+         for (x = rects->x; x < rects->x + rects->width; x++)
          {
-            p = p0;
-            q = q0;
-            for (x = rects->x; x < rects->x + rects->width; x++)
-            {
-               for (xz = 0; xz < 1; xz++)
-               {
-                  *q = *p;
-                  q++;
-               }
-               p++;
-            }
-            q0 += SYSVID_WIDTH;
+            *q = *p;
+            q++;
+            p++;
          }
+         q0 += SYSVID_WIDTH;
          p0 += SYSVID_WIDTH;
       }
 
-      area.x = rects->x;
-      area.y = rects->y;
-      area.h = rects->height;
-      area.w = rects->width;
-      SDL_UpdateRects(screen, 1, &area);
-
-      rects = rects->next;
+      rects  = rects->next;
    }
-
-   SDL_UnlockSurface(screen);
 }
 
 /*
