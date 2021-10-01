@@ -1,4 +1,5 @@
-#include "libretro.h"
+#include <libretro.h>
+#include <streams/file_stream.h>
 
 #include "libretro-core.h"
 
@@ -61,6 +62,7 @@ bool libretro_supports_bitmasks = false;
 
 void retro_set_environment(retro_environment_t cb)
 {
+   struct retro_vfs_interface_info vfs_iface_info;
    struct retro_variable variables[] = {
       { NULL, NULL },
    };
@@ -70,6 +72,11 @@ void retro_set_environment(retro_environment_t cb)
 
    cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_content);
    cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+
+	vfs_iface_info.required_interface_version = 1;
+	vfs_iface_info.iface                      = NULL;
+	if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+		filestream_vfs_init(&vfs_iface_info);
 }
 
 static void update_variables(void)

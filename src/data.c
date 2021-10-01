@@ -14,10 +14,21 @@
 #include <stdlib.h>  /* malloc */
 #include <string.h>
 
+#include <streams/file_stream.h>
+#include <file/file_path.h>
+
 #include "system.h"
 #include "data.h"
 
 #include "unzip.h"
+
+/* forward declarations */
+int64_t rfseek(RFILE* stream, int64_t offset, int origin);
+int64_t rfread(void* buffer,
+   size_t elem_size, size_t elem_count, RFILE* stream);
+int64_t rftell(RFILE* stream);
+RFILE* rfopen(const char *path, const char *mode);
+int rfclose(RFILE* stream);
 
 /*
  * Private typedefs
@@ -133,7 +144,7 @@ void data_closepath(void)
 data_file_t *data_file_open(char *name)
 {
    char *n;
-   FILE *fh;
+   RFILE *fh;
    zipped_t *z;
 
    if (path.zip)
@@ -153,7 +164,7 @@ data_file_t *data_file_open(char *name)
    n = malloc(strlen(path.name) + strlen(name) + 2);
    sprintf(n, "%s/%s", path.name, name);
    str_slash(n);
-   fh = fopen(n, "rb");
+   fh = rfopen(n, "rb");
    return (data_file_t *)fh;
 }
 
@@ -162,9 +173,9 @@ int data_file_size(data_file_t *file)
    int s;
    if (!path.zip)
    {
-      fseek((FILE *)file, 0, SEEK_END);
-      s = ftell((FILE *)file);
-      fseek((FILE *)file, 0, SEEK_SET);
+      rfseek((RFILE *)file, 0, SEEK_END);
+      s = rftell((RFILE *)file);
+      rfseek((RFILE *)file, 0, SEEK_SET);
    }
    return s;
 }
@@ -177,7 +188,7 @@ int data_file_seek(data_file_t *file, long offset, int origin)
 	/* not implemented */
 	if (path.zip)
 		return -1;
-	return fseek((FILE *)file, offset, origin);
+	return rfseek((RFILE *)file, offset, origin);
 }
 
 /*
@@ -188,7 +199,7 @@ int data_file_tell(data_file_t *file)
 	/* not implemented */
 	if (path.zip)
 		return -1;
-	return ftell((FILE *)file);
+	return rftell((RFILE *)file);
 }
 
 /*
@@ -199,7 +210,7 @@ int data_file_read(data_file_t *file, void *buf, size_t size, size_t count)
 	if (path.zip)
 		return unzReadCurrentFile(((zipped_t *)file)->zip,
             buf, size * count) / size;
-	return fread(buf, size, count, (FILE *)file);
+	return rfread(buf, size, count, (RFILE *)file);
 }
 
 /*
@@ -215,5 +226,5 @@ void data_file_close(data_file_t *file)
 		((zipped_t *)file)->name = NULL;
 	}
 	else
-		fclose((FILE *)file);
+		rfclose((RFILE *)file);
 }
