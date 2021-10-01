@@ -130,14 +130,422 @@ static sound_t *music_snd;
 /*
  * prototypes
  */
-static void frame(void);
+
 static void init(void);
-static void play0(void);
 static void play3(void);
-static void restart(void);
-static void isave(void);
-static void irestore(void);
-static void loaddata(void);
+
+
+/*
+ * isave (0bbb)
+ *
+ */
+static void isave(void)
+{
+  e_rick_save();
+  isave_frow = map_frow;
+}
+
+
+
+static void play0(void)
+{
+  if (control_status & CONTROL_END) {  /* request to end the game */
+    game_state = GAMEOVER;
+    return;
+  }
+
+  if (control_last == CONTROL_EXIT) {  /* request to exit the game */
+    game_state = EXIT;
+    return;
+  }
+
+  ent_action();      /* run entities */
+  e_them_rndseed++;  /* (0270) */
+
+  game_state = PLAY1;
+}
+
+/*
+ * irestore (0bdc)
+ *
+ */
+static void irestore(void)
+{
+  e_rick_restore();
+  map_frow = isave_frow;
+}
+
+/*
+ * restart
+ *
+ */
+static void restart(void)
+{
+  E_RICK_STRST(E_RICK_STDEAD|E_RICK_STZOMBIE);
+
+  game_bullets = 6;
+  game_bombs = 6;
+
+  ent_ents[1].n = 1;
+
+  irestore();
+  map_init();
+  isave();
+  ent_clprev();
+  draw_map();
+  draw_drawStatus();
+  game_rects = &draw_SCREENRECT;
+}
+
+
+/*
+ * Prepare frame
+ *
+ * This function loops forever: use 'return' when a frame is ready.
+ * When returning, game_rects must contain every parts of the buffer
+ * that have been modified.
+ */
+static void frame(void)
+{
+	while (1)
+	{
+		switch (game_state)
+		{
+
+
+
+#ifdef ENABLE_DEVTOOLS
+			case DEVTOOLS:
+				switch (devtools_run()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+						game_state = INIT_GAME;
+						break;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						return;
+				}
+				break;
+#endif
+
+
+
+			case XRICK:
+				switch(screen_xrick()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+#ifdef ENABLE_DEVTOOLS
+						game_state = DEVTOOLS;
+#else
+						game_state = INIT_GAME;
+#endif
+						break;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						return;
+				}
+				break;
+
+
+
+			case INIT_GAME:
+				init();
+				game_state = INTRO_MAIN;
+				break;
+
+
+
+			case INTRO_MAIN:
+				switch (screen_introMain()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+						game_state = INTRO_MAP;
+						break;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						return;
+				}
+				break;
+
+
+
+			case INTRO_MAP:
+				switch (screen_introMap()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+						game_waitevt = FALSE;
+						game_state = INIT_BUFFER;
+						break;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						return;
+				}
+				break;
+
+
+
+			case INIT_BUFFER:
+				sysvid_clear();                 /* clear buffer */
+				draw_map();                     /* draw the map onto the buffer */
+				draw_drawStatus();              /* draw the status bar onto the buffer */
+#ifdef ENABLE_CHEATS
+				draw_infos();                   /* draw the info bar onto the buffer */
+#endif
+				game_rects = &draw_SCREENRECT;  /* request full buffer refresh */
+				game_state = PLAY0;
+				return;
+
+
+
+			case PAUSE_PRESSED1:
+				screen_pause(TRUE);
+				game_state = PAUSE_PRESSED1B;
+				break;
+
+
+
+			case PAUSE_PRESSED1B:
+				if (control_status & CONTROL_PAUSE)
+					return;
+				game_state = PAUSED;
+				break;
+
+
+
+			case PAUSED:
+				if (control_status & CONTROL_PAUSE)
+					game_state = PAUSE_PRESSED2;
+				if (control_status & CONTROL_EXIT)
+					game_state = EXIT;
+				return;
+
+
+
+			case PAUSE_PRESSED2:
+				if (!(control_status & CONTROL_PAUSE)) {
+					game_waitevt = FALSE;
+					screen_pause(FALSE);
+#ifdef ENABLE_SOUND
+					syssnd_pause(FALSE, FALSE);
+#endif
+					game_state = PLAY2;
+				}
+				return;
+
+
+
+			case PLAY0:
+				play0();
+				break;
+
+
+
+			case PLAY1:
+				if (control_status & CONTROL_PAUSE) {
+#ifdef ENABLE_SOUND
+					syssnd_pause(TRUE, FALSE);
+#endif
+					game_waitevt = TRUE;
+					game_state = PAUSE_PRESSED1;
+				}
+				else if (control_active == FALSE) {
+#ifdef ENABLE_SOUND
+					syssnd_pause(TRUE, FALSE);
+#endif
+					game_waitevt = TRUE;
+					screen_pause(TRUE);
+					game_state = PAUSED;
+				}
+				else
+					game_state = PLAY2;
+				break;
+
+
+
+			case PLAY2:
+				if E_RICK_STTST(E_RICK_STDEAD) {  /* rick is dead */
+					if (game_cheat1 || --game_lives) {
+						game_state = RESTART;
+					} else {
+						game_state = GAMEOVER;
+					}
+				}
+				else if (game_chsm)  /* request to chain to next submap */
+					game_state = CHAIN_SUBMAP;
+				else
+					game_state = PLAY3;
+				break;
+
+
+
+			case PLAY3:
+				play3();
+				return;
+
+
+
+			case CHAIN_SUBMAP:
+				if (map_chain())
+					game_state = CHAIN_END;
+				else {
+					game_bullets = 0x06;
+					game_bombs = 0x06;
+					game_map++;
+
+					if (game_map == 0x04) {
+						/* reached end of game */
+						/* FIXME @292?*/
+					}
+
+					game_state = CHAIN_MAP;
+				}
+				break;
+
+
+
+			case CHAIN_MAP:                             /* CHAIN MAP */
+				switch (screen_introMap()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+						if (game_map >= 0x04) {  /* reached end of game */
+							sysarg_args_map = 0;
+							sysarg_args_submap = 0;
+							game_state = GAMEOVER;
+						}
+						else {  /* initialize game */
+							ent_ents[1].x = map_maps[game_map].x;
+							ent_ents[1].y = map_maps[game_map].y;
+							map_frow = (U8)map_maps[game_map].row;
+							game_submap = map_maps[game_map].submap;
+							game_state = CHAIN_END;
+						}
+						break;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						return;
+				}
+				break;
+
+
+
+			case CHAIN_END:
+				map_init();                     /* initialize the map */
+				isave();                        /* save data in case of a restart */
+				ent_clprev();                   /* cleanup entities */
+				draw_map();                     /* draw the map onto the buffer */
+				draw_drawStatus();              /* draw the status bar onto the buffer */
+				game_rects = &draw_SCREENRECT;  /* request full screen refresh */
+				game_state = PLAY3;
+				return;
+
+
+
+			case SCROLL_UP:
+				switch (scroll_up()) {
+					case SCROLL_RUNNING:
+						return;
+					case SCROLL_DONE:
+						game_state = PLAY0;
+						break;
+				}
+				break;
+
+
+
+			case SCROLL_DOWN:
+				switch (scroll_down()) {
+					case SCROLL_RUNNING:
+						return;
+					case SCROLL_DONE:
+						game_state = PLAY0;
+						break;
+				}
+				break;
+
+
+
+			case RESTART:
+				restart();
+				game_state = PLAY0;
+				return;
+
+
+
+			case GAMEOVER:
+				switch (screen_gameover()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+						game_state = GETNAME;
+						break;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						break;
+				}
+				break;
+
+
+
+			case GETNAME:
+				switch (screen_getname()) {
+					case SCREEN_RUNNING:
+						return;
+					case SCREEN_DONE:
+						game_state = INIT_GAME;
+						return;
+					case SCREEN_EXIT:
+						game_state = EXIT;
+						break;
+				}
+				break;
+
+
+
+			case EXIT:
+				return;
+
+		}
+	}
+}
+
+static void loaddata(void)
+{
+#ifdef ENABLE_SOUND
+	/*
+	 * Cache sounds
+	 *
+	 * tune[0-5].wav not cached
+	 */
+	WAV_GAMEOVER = syssnd_load("sounds/gameover.wav");
+	WAV_SBONUS2 = syssnd_load("sounds/sbonus2.wav");
+	WAV_BULLET = syssnd_load("sounds/bullet.wav");
+	WAV_BOMBSHHT = syssnd_load("sounds/bombshht.wav");
+	WAV_EXPLODE = syssnd_load("sounds/explode.wav");
+	WAV_STICK = syssnd_load("sounds/stick.wav");
+	WAV_WALK = syssnd_load("sounds/walk.wav");
+	WAV_CRAWL = syssnd_load("sounds/crawl.wav");
+	WAV_JUMP = syssnd_load("sounds/jump.wav");
+	WAV_PAD = syssnd_load("sounds/pad.wav");
+	WAV_BOX = syssnd_load("sounds/box.wav");
+	WAV_BONUS = syssnd_load("sounds/bonus.wav");
+	WAV_SBONUS1 = syssnd_load("sounds/sbonus1.wav");
+	WAV_DIE = syssnd_load("sounds/die.wav");
+	WAV_ENTITY[0] = syssnd_load("sounds/ent0.wav");
+	WAV_ENTITY[1] = syssnd_load("sounds/ent1.wav");
+	WAV_ENTITY[2] = syssnd_load("sounds/ent2.wav");
+	WAV_ENTITY[3] = syssnd_load("sounds/ent3.wav");
+	WAV_ENTITY[4] = syssnd_load("sounds/ent4.wav");
+	WAV_ENTITY[5] = syssnd_load("sounds/ent5.wav");
+	WAV_ENTITY[6] = syssnd_load("sounds/ent6.wav");
+	WAV_ENTITY[7] = syssnd_load("sounds/ent7.wav");
+	WAV_ENTITY[8] = syssnd_load("sounds/ent8.wav");
+#endif
+}
 
 
 /*
@@ -236,326 +644,9 @@ void game_iterate(void)
 }
 
 /*
- * Prepare frame
- *
- * This function loops forever: use 'return' when a frame is ready.
- * When returning, game_rects must contain every parts of the buffer
- * that have been modified.
- */
-static void
-frame(void)
-{
-	while (1) {
-
-		switch (game_state) {
-
-
-
-#ifdef ENABLE_DEVTOOLS
-		case DEVTOOLS:
-			switch (devtools_run()) {
-			case SCREEN_RUNNING:
-				return;
-			case SCREEN_DONE:
-				game_state = INIT_GAME;
-				break;
-			case SCREEN_EXIT:
-				game_state = EXIT;
-				return;
-			}
-		break;
-#endif
-
-
-
-		case XRICK:
-			switch(screen_xrick()) {
-			case SCREEN_RUNNING:
-				return;
-			case SCREEN_DONE:
-#ifdef ENABLE_DEVTOOLS
-				game_state = DEVTOOLS;
-#else
-				game_state = INIT_GAME;
-#endif
-				break;
-			case SCREEN_EXIT:
-				game_state = EXIT;
-				return;
-			}
-		break;
-
-
-
-		case INIT_GAME:
-			init();
-			game_state = INTRO_MAIN;
-			break;
-
-
-
-		case INTRO_MAIN:
-			switch (screen_introMain()) {
-			case SCREEN_RUNNING:
-				return;
-			case SCREEN_DONE:
-				game_state = INTRO_MAP;
-				break;
-			case SCREEN_EXIT:
-				game_state = EXIT;
-				return;
-			}
-		break;
-
-
-
-		case INTRO_MAP:
-			switch (screen_introMap()) {
-			case SCREEN_RUNNING:
-				return;
-			case SCREEN_DONE:
-				game_waitevt = FALSE;
-				game_state = INIT_BUFFER;
-				break;
-			case SCREEN_EXIT:
-				game_state = EXIT;
-				return;
-			}
-		break;
-
-
-
-		case INIT_BUFFER:
-			sysvid_clear();                 /* clear buffer */
-			draw_map();                     /* draw the map onto the buffer */
-			draw_drawStatus();              /* draw the status bar onto the buffer */
-#ifdef ENABLE_CHEATS
-			draw_infos();                   /* draw the info bar onto the buffer */
-#endif
-			game_rects = &draw_SCREENRECT;  /* request full buffer refresh */
-			game_state = PLAY0;
-			return;
-
-
-
-		case PAUSE_PRESSED1:
-			screen_pause(TRUE);
-			game_state = PAUSE_PRESSED1B;
-			break;
-
-
-
-		case PAUSE_PRESSED1B:
-			if (control_status & CONTROL_PAUSE)
-				return;
-			game_state = PAUSED;
-			break;
-
-
-
-		case PAUSED:
-			if (control_status & CONTROL_PAUSE)
-				game_state = PAUSE_PRESSED2;
-			if (control_status & CONTROL_EXIT)
-				game_state = EXIT;
-			return;
-
-
-
-		case PAUSE_PRESSED2:
-			if (!(control_status & CONTROL_PAUSE)) {
-				game_waitevt = FALSE;
-				screen_pause(FALSE);
-#ifdef ENABLE_SOUND
-				syssnd_pause(FALSE, FALSE);
-#endif
-				game_state = PLAY2;
-			}
-		return;
-
-
-
-		case PLAY0:
-			play0();
-			break;
-
-
-
-		case PLAY1:
-			if (control_status & CONTROL_PAUSE) {
-#ifdef ENABLE_SOUND
-				syssnd_pause(TRUE, FALSE);
-#endif
-				game_waitevt = TRUE;
-				game_state = PAUSE_PRESSED1;
-			}
-			else if (control_active == FALSE) {
-#ifdef ENABLE_SOUND
-				syssnd_pause(TRUE, FALSE);
-#endif
-				game_waitevt = TRUE;
-				screen_pause(TRUE);
-				game_state = PAUSED;
-			}
-			else
-				game_state = PLAY2;
-			break;
-
-
-
-		case PLAY2:
-			if E_RICK_STTST(E_RICK_STDEAD) {  /* rick is dead */
-				if (game_cheat1 || --game_lives) {
-					game_state = RESTART;
-				} else {
-					game_state = GAMEOVER;
-				}
-			}
-			else if (game_chsm)  /* request to chain to next submap */
-				game_state = CHAIN_SUBMAP;
-			else
-				game_state = PLAY3;
-			break;
-
-
-
-    case PLAY3:
-      play3();
-      return;
-
-
-
-    case CHAIN_SUBMAP:
-      if (map_chain())
-	game_state = CHAIN_END;
-      else {
-	game_bullets = 0x06;
-	game_bombs = 0x06;
-	game_map++;
-
-	if (game_map == 0x04) {
-	  /* reached end of game */
-	  /* FIXME @292?*/
-	}
-
-	game_state = CHAIN_MAP;
-      }
-      break;
-
-
-
-    case CHAIN_MAP:                             /* CHAIN MAP */
-      switch (screen_introMap()) {
-      case SCREEN_RUNNING:
-	return;
-      case SCREEN_DONE:
-	if (game_map >= 0x04) {  /* reached end of game */
-	  sysarg_args_map = 0;
-	  sysarg_args_submap = 0;
-	  game_state = GAMEOVER;
-	}
-	else {  /* initialize game */
-	  ent_ents[1].x = map_maps[game_map].x;
-	  ent_ents[1].y = map_maps[game_map].y;
-	  map_frow = (U8)map_maps[game_map].row;
-	  game_submap = map_maps[game_map].submap;
-	  game_state = CHAIN_END;
-	}
-	break;
-      case SCREEN_EXIT:
-	game_state = EXIT;
-	return;
-      }
-      break;
-
-
-
-    case CHAIN_END:
-      map_init();                     /* initialize the map */
-      isave();                        /* save data in case of a restart */
-      ent_clprev();                   /* cleanup entities */
-      draw_map();                     /* draw the map onto the buffer */
-      draw_drawStatus();              /* draw the status bar onto the buffer */
-      game_rects = &draw_SCREENRECT;  /* request full screen refresh */
-      game_state = PLAY3;
-      return;
-
-
-
-    case SCROLL_UP:
-      switch (scroll_up()) {
-      case SCROLL_RUNNING:
-	return;
-      case SCROLL_DONE:
-	game_state = PLAY0;
-	break;
-      }
-      break;
-
-
-
-    case SCROLL_DOWN:
-      switch (scroll_down()) {
-      case SCROLL_RUNNING:
-	return;
-      case SCROLL_DONE:
-	game_state = PLAY0;
-	break;
-      }
-      break;
-
-
-
-    case RESTART:
-      restart();
-      game_state = PLAY0;
-      return;
-
-
-
-    case GAMEOVER:
-      switch (screen_gameover()) {
-      case SCREEN_RUNNING:
-	return;
-      case SCREEN_DONE:
-	game_state = GETNAME;
-	break;
-      case SCREEN_EXIT:
-	game_state = EXIT;
-	break;
-      }
-      break;
-
-
-
-    case GETNAME:
-      switch (screen_getname()) {
-      case SCREEN_RUNNING:
-	return;
-      case SCREEN_DONE:
-	game_state = INIT_GAME;
-	return;
-      case SCREEN_EXIT:
-	game_state = EXIT;
-	break;
-      }
-      break;
-
-
-
-    case EXIT:
-      return;
-
-    }
-  }
-}
-
-
-/*
  * Initialize the game
  */
-static void
-init(void)
+static void init(void)
 {
   U8 i;
 
@@ -599,37 +690,11 @@ init(void)
   isave();
 }
 
-
-/*
- * play0
- *
- */
-static void
-play0(void)
-{
-  if (control_status & CONTROL_END) {  /* request to end the game */
-    game_state = GAMEOVER;
-    return;
-  }
-
-  if (control_last == CONTROL_EXIT) {  /* request to exit the game */
-    game_state = EXIT;
-    return;
-  }
-
-  ent_action();      /* run entities */
-  e_them_rndseed++;  /* (0270) */
-
-  game_state = PLAY1;
-}
-
-
 /*
  * play3
  *
  */
-static void
-play3(void)
+static void play3(void)
 {
   static rect_t *r;
 
@@ -655,95 +720,6 @@ play3(void)
   game_state = PLAY0;
 }
 
-
-/*
- * restart
- *
- */
-static void
-restart(void)
-{
-  E_RICK_STRST(E_RICK_STDEAD|E_RICK_STZOMBIE);
-
-  game_bullets = 6;
-  game_bombs = 6;
-
-  ent_ents[1].n = 1;
-
-  irestore();
-  map_init();
-  isave();
-  ent_clprev();
-  draw_map();
-  draw_drawStatus();
-  game_rects = &draw_SCREENRECT;
-}
-
-
-/*
- * isave (0bbb)
- *
- */
-static void
-isave(void)
-{
-  e_rick_save();
-  isave_frow = map_frow;
-}
-
-
-/*
- * irestore (0bdc)
- *
- */
-static void
-irestore(void)
-{
-  e_rick_restore();
-  map_frow = isave_frow;
-}
-
-/*
- *
- */
-static void
-loaddata()
-{
-#ifdef ENABLE_SOUND
-	/*
-	 * Cache sounds
-	 *
-	 * tune[0-5].wav not cached
-	 */
-	WAV_GAMEOVER = syssnd_load("sounds/gameover.wav");
-	WAV_SBONUS2 = syssnd_load("sounds/sbonus2.wav");
-	WAV_BULLET = syssnd_load("sounds/bullet.wav");
-	WAV_BOMBSHHT = syssnd_load("sounds/bombshht.wav");
-	WAV_EXPLODE = syssnd_load("sounds/explode.wav");
-	WAV_STICK = syssnd_load("sounds/stick.wav");
-	WAV_WALK = syssnd_load("sounds/walk.wav");
-	WAV_CRAWL = syssnd_load("sounds/crawl.wav");
-	WAV_JUMP = syssnd_load("sounds/jump.wav");
-	WAV_PAD = syssnd_load("sounds/pad.wav");
-	WAV_BOX = syssnd_load("sounds/box.wav");
-	WAV_BONUS = syssnd_load("sounds/bonus.wav");
-	WAV_SBONUS1 = syssnd_load("sounds/sbonus1.wav");
-	WAV_DIE = syssnd_load("sounds/die.wav");
-	WAV_ENTITY[0] = syssnd_load("sounds/ent0.wav");
-	WAV_ENTITY[1] = syssnd_load("sounds/ent1.wav");
-	WAV_ENTITY[2] = syssnd_load("sounds/ent2.wav");
-	WAV_ENTITY[3] = syssnd_load("sounds/ent3.wav");
-	WAV_ENTITY[4] = syssnd_load("sounds/ent4.wav");
-	WAV_ENTITY[5] = syssnd_load("sounds/ent5.wav");
-	WAV_ENTITY[6] = syssnd_load("sounds/ent6.wav");
-	WAV_ENTITY[7] = syssnd_load("sounds/ent7.wav");
-	WAV_ENTITY[8] = syssnd_load("sounds/ent8.wav");
-#endif
-}
-
-/*
- *
- */
 void freedata(void)
 {
 #ifdef ENABLE_SOUND
@@ -773,6 +749,5 @@ void freedata(void)
 	syssnd_free(WAV_ENTITY[8]);
 #endif
 }
-
 
 /* eof */

@@ -75,16 +75,7 @@ static U8 BLUE[] = { 0x00, 0x00, 0x68, 0x68,
                      0x80, 0x98, 0xb0, 0xc8};
 #endif
 
-/*
- * Initialize screen
- */
-static SDL_Surface *initScreen(U16 w, U16 h, U8 bpp, U32 flags)
-{
-   return SDL_CreateRGBSurface( flags,w, h,bpp , 0x00ff0000,0x0000ff00,0xff,0xff000000);
-}
-
-void
-sysvid_setPalette(img_color_t *pal, U16 n)
+void sysvid_setPalette(img_color_t *pal, U16 n)
 {
    U16 i;
 
@@ -97,14 +88,7 @@ sysvid_setPalette(img_color_t *pal, U16 n)
    SDL_SetPalette(screen,0, (SDL_Color *)&palette, 0, n);
 }
 
-void
-sysvid_restorePalette()
-{
-   SDL_SetPalette(screen,0, (SDL_Color *)&palette, 0, 256);
-}
-
-void
-sysvid_setGamePalette()
+void sysvid_setGamePalette(void)
 {
    U8 i;
    img_color_t pal[256];
@@ -119,18 +103,9 @@ sysvid_setGamePalette()
 }
 
 /*
- * Initialize video modes
- */
-void
-sysvid_chkvm(void)
-{
-}
-
-/*
  * Initialise video
  */
-void
-sysvid_init(void)
+void sysvid_init(void)
 {
    SDL_Surface *s;
    U8 *mask, tpix;
@@ -141,10 +116,7 @@ sysvid_init(void)
       sys_panic("xrick/video: could not init SDL\n");
    /* video modes and screen */
    videoFlags = SDL_HWSURFACE|SDL_HWPALETTE;
-   screen     = initScreen(
-         SYSVID_WIDTH,
-         SYSVID_HEIGHT,
-         8, videoFlags);
+   screen     = SDL_CreateRGBSurface( videoFlags, SYSVID_WIDTH, SYSVID_HEIGHT, 8 , 0x00ff0000,0x0000ff00,0xff,0xff000000);
 
    /*
     * create v_ frame buffer
@@ -157,8 +129,7 @@ sysvid_init(void)
 /*
  * Shutdown video
  */
-void
-sysvid_shutdown(void)
+void sysvid_shutdown(void)
 {
    if (sysvid_fb)
       free(sysvid_fb);
@@ -173,12 +144,12 @@ void blit(void)
 {
    SDL_BlitSurface(screen, NULL, sdlscrn, NULL);
 }
+
 /*
  * Update screen
  * NOTE errors processing ?
  */
-void
-sysvid_update(rect_t *rects)
+void sysvid_update(rect_t *rects)
 {
    static SDL_Rect area;
    U16 x, y, xz, yz;
@@ -229,13 +200,11 @@ sysvid_update(rect_t *rects)
    SDL_UnlockSurface(screen);
 }
 
-
 /*
  * Clear screen
  * (077C)
  */
-void
-sysvid_clear(void)
+void sysvid_clear(void)
 {
    memset(sysvid_fb, 0, SYSVID_WIDTH * SYSVID_HEIGHT);
 }
