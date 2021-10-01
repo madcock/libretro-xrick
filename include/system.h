@@ -83,12 +83,6 @@ extern void sysvid_setGamePalette(void);
 extern void sysvid_setPalette(img_color_t *, U16);
 
 /*
- * events section
- */
-extern void sysevt_poll(void);
-extern void sysevt_wait(void);
-
-/*
  * keyboard section
  */
 extern U8 syskbd_up;
@@ -142,15 +136,6 @@ extern int sysarg_args_vol;
 extern char *sysarg_args_data;
 
 extern void sysarg_init(int, char **);
-
-/*
- * joystick section
- */
-#ifdef ENABLE_JOYSTICK
-extern void sysjoy_init(void);
-extern void sysjoy_shutdown(void);
-#endif
-
 
 #endif
 

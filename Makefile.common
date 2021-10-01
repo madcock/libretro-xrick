@@ -45,9 +45,7 @@ SOURCES_C := \
 	$(CORE_DIR)/src/control.c \
 	$(CORE_DIR)/src/system.c \
 	$(CORE_DIR)/src/scroller.c \
-	$(CORE_DIR)/src/sysevt.c \
 	$(CORE_DIR)/src/sysarg.c \
-	$(CORE_DIR)/src/sysjoy.c \
 	$(CORE_DIR)/src/dat_snd.c \
 	$(CORE_DIR)/libretro/core/soundplay.c \
 	$(CORE_DIR)/libretro/sdl_wrapp/sdl_primitives.c \

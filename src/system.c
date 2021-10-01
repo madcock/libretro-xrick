@@ -89,9 +89,6 @@ sys_init(int argc, char **argv)
 {
 	sysarg_init(argc, argv);
 	sysvid_init();
-#ifdef ENABLE_JOYSTICK
-	sysjoy_init();
-#endif
 #ifdef ENABLE_SOUND
 	if (sysarg_args_nosound == 0)
 		syssnd_init();
@@ -109,9 +106,6 @@ sys_shutdown(void)
 {
 #ifdef ENABLE_SOUND
 	syssnd_shutdown();
-#endif
-#ifdef ENABLE_JOYSTICK
-	sysjoy_shutdown();
 #endif
 	sysvid_shutdown();
 }

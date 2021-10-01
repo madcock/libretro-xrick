@@ -230,9 +230,6 @@ void game_iterate(void)
       syssnd_callback(NULL,441*2);			
    /*snd_mix();*/
 
-   /* events */
-   //sysevt_poll();  /* process events (non-blocking) */
-
    /* frame */
    frame();
    blit();

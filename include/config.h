@@ -24,9 +24,6 @@
 #define ENABLE_SOUND
 
 #ifndef __LIBRETRO__
-/* joystick support */
-#undef ENABLE_JOYSTICK
-
 /* cheats support */
 #define ENABLE_CHEATS
 #endif
