@@ -6,9 +6,6 @@
 /* @(#) $Id$ */
 
 #include <compat/zutil.h>
-#ifndef Z_SOLO
-#  include "gzguts.h"
-#endif
 
 char z_errmsg[10][21] = {
    "need dictionary",     /* Z_NEED_DICT       2  */
