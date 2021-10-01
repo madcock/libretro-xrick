@@ -22,19 +22,25 @@ SDL_Surface *sdlscrn;
 
 void SDL_Uninit(void)
 {
-   if(sdlscrn->format->palette->colors)	
-      free(sdlscrn->format->palette->colors);
+   if (sdlscrn)
+   {
 
-   if(sdlscrn->format->palette)	
-      free(sdlscrn->format->palette);
-   if(sdlscrn->format)	
-      free(sdlscrn->format);
+      if(sdlscrn->format)	
+      {
+         if(sdlscrn->format->palette)	
+         {
+            if(sdlscrn->format->palette->colors)	
+               free(sdlscrn->format->palette->colors);
+            free(sdlscrn->format->palette);
+         }
+         free(sdlscrn->format);
+      }
 
-   if(sdlscrn->pixels)
-      sdlscrn->pixels=NULL;
+      if(sdlscrn->pixels)
+         sdlscrn->pixels=NULL;
 
-   if(sdlscrn)	
       free(sdlscrn);
+   }
 }
 
 const char *retro_save_directory;
@@ -68,15 +74,10 @@ void retro_set_environment(retro_environment_t cb)
 
 static void update_variables(void)
 {
+   /* TODO/FIXME - add core options? */
 }
 
-static void retro_wrap_emulator(void)
-{    
-}
-
-void retro_reset(void)
-{
-}
+void retro_reset(void) { }
 
 void StartTicks(void);
 
@@ -93,22 +94,25 @@ void retro_init(void)
 
    StartTicks();
 
-   // if defined, use the system directory			
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
+   /* if defined, use the system directory */
+   if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) 
+         && system_dir)
       retro_system_directory=system_dir;		
 
-   // if defined, use the system directory			
-   if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
+   /* if defined, use the system directory */
+   if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) 
+         && content_dir)
       retro_content_directory=content_dir;		
 
-   // If save directory is defined use it, otherwise use system directory
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
+   /* If save directory is defined use it, otherwise use system directory */
+   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) 
+         && save_dir)
       retro_save_directory = *save_dir ? save_dir : retro_system_directory;      
    else
       // make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
       retro_save_directory=retro_system_directory;
 
-   if(retro_system_directory==NULL)
+   if (!retro_system_directory)
       sprintf(RETRO_DIR, "%s\0",".");
    else
       sprintf(RETRO_DIR, "%s\0", retro_system_directory);
@@ -137,11 +141,7 @@ unsigned retro_api_version(void)
    return RETRO_API_VERSION;
 }
 
-void retro_set_controller_port_device(unsigned port, unsigned device)
-{
-   (void)port;
-   (void)device;
-}
+void retro_set_controller_port_device(unsigned port, unsigned device) { }
 
 void retro_get_system_info(struct retro_system_info *info)
 {
@@ -155,7 +155,8 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
-   struct retro_game_geometry geom = { retrow, retroh, retrow, retrow,4.0 / 3.0 };
+   struct retro_game_geometry geom   = { retrow, retroh, retrow, retrow,
+      4.0 / 3.0 };
    struct retro_system_timing timing = { 25.0, 22050.0 };
 
    info->geometry = geom;
@@ -184,7 +185,8 @@ void retro_run(void)
 {
    bool updated = false;
 
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) 
+         && updated)
       update_variables();
 
    Retro_PollEvent();
@@ -212,8 +214,9 @@ bool retro_load_game(const struct retro_game_info *info)
       sprintf(RPATH,"\"xrick\" \"-data\" \"%s\"\0", info->path);
    else
       sprintf(RPATH,"\"xrick\" \"-data\" \"%s/data.zip\"\0", retro_system_directory);
-   pre_main(RPATH);
-	game_run();
+   if (pre_main(RPATH) == -1)
+      return false;
+   game_run();
 
    return true;
 }
@@ -222,9 +225,9 @@ void freedata(void);
 
 void retro_unload_game(void)
 {
-	freedata(); /* free cached data */
-	data_closepath();
-	sys_shutdown();
+   freedata(); /* free cached data */
+   data_closepath();
+   sys_shutdown();
 }
 
 unsigned retro_get_region(void)
@@ -257,13 +260,11 @@ bool retro_unserialize(const void *data_, size_t size)
 
 void *retro_get_memory_data(unsigned id)
 {
-   (void)id;
    return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
 {
-   (void)id;
    return 0;
 }
 

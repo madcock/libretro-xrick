@@ -11,31 +11,11 @@
  * You must not remove this notice, or any other, from this software.
  */
 
-#include <stdarg.h>   /* args for sys_panic */
 #include <stdio.h>    /* printf */
 #include <stdlib.h>
 #include <signal.h>
 
 #include "system.h"
-
-/*
- * Panic
- */
-void
-sys_panic(char *err, ...)
-{
-  va_list argptr;
-  char s[1024];
-
-  /* prepare message */
-  va_start(argptr, err);
-  vsprintf(s, err, argptr);
-  va_end(argptr);
-
-  /* print message and die */
-  printf("%s\npanic!\n", s);
-  exit(1);
-}
 
 /* forward declaration */
 extern long GetTicks(void);

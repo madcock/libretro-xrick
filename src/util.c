@@ -31,16 +31,14 @@
  * x,y: coordinates to test.
  * ret: TRUE/(x,y) is within e's space, FALSE/not.
  */
-U8
-u_fboxtest(U8 e, S16 x, S16 y)
+U8 u_fboxtest(U8 e, S16 x, S16 y)
 {
   if (ent_ents[e].x >= x ||
       ent_ents[e].x + ent_ents[e].w < x ||
       ent_ents[e].y >= y ||
       ent_ents[e].y + ent_ents[e].h < y)
     return FALSE;
-  else
-    return TRUE;
+  return TRUE;
 }
 
 
@@ -55,24 +53,22 @@ u_fboxtest(U8 e, S16 x, S16 y)
  * e2: entity to test (corresponds to SI in asm code).
  * ret: TRUE/intersect, FALSE/not.
  */
-U8
-u_boxtest(U8 e1, U8 e2)
+U8 u_boxtest(U8 e1, U8 e2)
 {
-  /* rick is special (may be crawling) */
-  if (e1 == E_RICK_NO)
-    return e_rick_boxtest(e2);
+   /* rick is special (may be crawling) */
+   if (e1 == E_RICK_NO)
+      return e_rick_boxtest(e2);
 
-  /*
-   * entity 1: x+0x05 to x+0x011, y to y+0x14
-   * entity 2: x to x+ .w, y to y+ .h
-   */
-  if (ent_ents[e1].x + 0x11 < ent_ents[e2].x ||
-      ent_ents[e1].x + 0x05 > ent_ents[e2].x + ent_ents[e2].w ||
-      ent_ents[e1].y + 0x14 < ent_ents[e2].y ||
-      ent_ents[e1].y > ent_ents[e2].y + ent_ents[e2].h - 1)
-    return FALSE;
-  else
-    return TRUE;
+   /*
+    * entity 1: x+0x05 to x+0x011, y to y+0x14
+    * entity 2: x to x+ .w, y to y+ .h
+    */
+   if (ent_ents[e1].x + 0x11 < ent_ents[e2].x ||
+         ent_ents[e1].x + 0x05 > ent_ents[e2].x + ent_ents[e2].w ||
+         ent_ents[e1].y + 0x14 < ent_ents[e2].y ||
+         ent_ents[e1].y > ent_ents[e2].y + ent_ents[e2].h - 1)
+      return FALSE;
+   return TRUE;
 }
 
 
@@ -86,8 +82,7 @@ u_boxtest(U8 e1, U8 e2)
  * rc0: anything CHANGED to the environment flag for crawling (6DBA)
  * rc1: anything CHANGED to the environment flag (6DAD)
  */
-void
-u_envtest(S16 x, S16 y, U8 crawl, U8 *rc0, U8 *rc1)
+void u_envtest(S16 x, S16 y, U8 crawl, U8 *rc0, U8 *rc1)
 {
   U8 i, xx;
 
@@ -188,21 +183,17 @@ u_envtest(S16 x, S16 y, U8 crawl, U8 *rc0, U8 *rc1)
  * ASM 126F
  * return: FALSE if not in box, TRUE if in box.
  */
-U8
-u_trigbox(U8 e, S16 x, S16 y)
+U8 u_trigbox(U8 e, S16 x, S16 y)
 {
-  U16 xmax, ymax;
+   U16 xmax = ent_ents[e].trig_x + (ent_entdata[ent_ents[e].n & 0x7F].trig_w << 3);
+   U16 ymax = ent_ents[e].trig_y + (ent_entdata[ent_ents[e].n & 0x7F].trig_h << 3);
 
-  xmax = ent_ents[e].trig_x + (ent_entdata[ent_ents[e].n & 0x7F].trig_w << 3);
-  ymax = ent_ents[e].trig_y + (ent_entdata[ent_ents[e].n & 0x7F].trig_h << 3);
+   if (xmax > 0xFF) xmax = 0xFF;
 
-  if (xmax > 0xFF) xmax = 0xFF;
-
-  if (x <= ent_ents[e].trig_x || x > xmax ||
-      y <= ent_ents[e].trig_y || y > ymax)
-    return FALSE;
-  else
-    return TRUE;
+   if (x <= ent_ents[e].trig_x || x > xmax ||
+         y <= ent_ents[e].trig_y || y > ymax)
+      return FALSE;
+   return TRUE;
 }
 
 

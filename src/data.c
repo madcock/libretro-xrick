@@ -84,11 +84,11 @@ static char *str_slash(char *s)
 /*
  *
  */
-void data_setpath(char *name)
+int data_setpath(char *name)
 {
-	unzFile zip;
+   unzFile zip;
 
-	if (str_zipext(name))
+   if (str_zipext(name))
    {
       /* path has .zip extension */
       char *n   = str_slash(str_dup(name));
@@ -96,13 +96,11 @@ void data_setpath(char *name)
       if (!zip)
       {
          free(n);
-         sys_panic("(data) can not open data");
+         return -1;
       }
-      else
-      {
-         path.zip  = zip;
-         path.name = n;
-      }
+
+      path.zip  = zip;
+      path.name = n;
    }
    else
    {
@@ -111,6 +109,8 @@ void data_setpath(char *name)
       path.zip  = NULL;
       path.name = str_dup(name);
    }
+
+   return 0;
 }
 
 /*

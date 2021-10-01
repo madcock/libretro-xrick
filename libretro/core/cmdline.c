@@ -85,33 +85,21 @@ static void parse_cmdline(const char *argv)
 int pre_main(const char *argv)
 {
    int i;
-   bool Only1Arg;
 
    parse_cmdline(argv); 
-
-   Only1Arg = (strcmp(ARGUV[0],"skelsdl") == 0) ?  1: 0;
 
    for (i = 0; i<64; i++)
       xargv_cmd[i] = NULL;
 
-   if(Only1Arg)
-   {
-      Add_Option("skelsdl");
-      Add_Option(RPATH/*ARGUV[0]*/);
-   }
-   else
-   { // Pass all cmdline args
-      for(i = 0; i < ARGUC; i++)
-         Add_Option(ARGUV[i]);
-   }
+   /* Pass all cmdline args */
+   for(i = 0; i < ARGUC; i++)
+      Add_Option(ARGUV[i]);
 
    for (i = 0; i < PARAMCOUNT; i++)
-   {
       xargv_cmd[i] = (char*)(XARGV[i]);
-      printf("%2d  %s\n",i,XARGV[i]);
-   }
 
-   skel_main(PARAMCOUNT,( char **)xargv_cmd); 
+   if (skel_main(PARAMCOUNT,( char **)xargv_cmd) == -1)
+      return -1;
 
    xargv_cmd[PARAMCOUNT - 2] = NULL;
 

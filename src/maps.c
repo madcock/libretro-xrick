@@ -152,8 +152,6 @@ map_chain(void)
    * found, then panic
    */
   for (c = map_submaps[game_submap].connect; ; c++) {
-    if (map_connect[c].dir == 0xff)
-      sys_panic("(map_chain) can not find connector\n");
     if (map_connect[c].dir != game_dir) continue;
     t = (ent_ents[1].y >> 3) + map_frow - map_connect[c].rowout;
     if (t < 3) break;
