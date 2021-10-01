@@ -32,15 +32,6 @@
 #define strcasecmp stricmp
 #endif
 
-typedef struct {
-  char name[16];
-  int code;
-} sdlcodes_t;
-
-static sdlcodes_t sdlcodes[SDLK_LAST] = {
-#include "sdlcodes.e"
-};
-
 int sysarg_args_period = 0;
 int sysarg_args_map = 0;
 int sysarg_args_submap = 0;
@@ -65,77 +56,6 @@ sysarg_fail(char *msg)
 }
 
 /*
- * Get SDL key code
- */
-static int
-sysarg_sdlcode(char *k)
-{
-  int i, result;
-
-  i = 0;
-  result = 0;
-
-  while (sdlcodes[i].code) {
-    if (!strcasecmp(sdlcodes[i].name, k)) {
-      result = sdlcodes[i].code;
-      break;
-    }
-    i++;
-  }
-
-  return result;
-}
-
-/*
- * Scan key codes sequence
- */
-int
-sysarg_scankeys(char *keys)
-{
-  char k[16];
-  int i, j;
-
-  i = 0;
-
-  j = 0;
-  while (keys[i] != '\0' && keys[i] != '-' && j + 1 < sizeof k) k[j++] = keys[i++];
-  if (keys[i++] == '\0') return -1;
-  k[j] = '\0';
-  syskbd_left = sysarg_sdlcode(k);
-  if (!syskbd_left) return -1;
-
-  j = 0;
-  while (keys[i] != '\0' && keys[i] != '-' && j + 1 < sizeof k) k[j++] = keys[i++];
-  if (keys[i++] == '\0') return -1;
-  k[j] = '\0';
-  syskbd_right = sysarg_sdlcode(k);
-  if (!syskbd_right) return -1;
-
-  j = 0;
-  while (keys[i] != '\0' && keys[i] != '-' && j + 1 < sizeof k) k[j++] = keys[i++];
-  if (keys[i++] == '\0') return -1;
-  k[j] = '\0';
-  syskbd_up = sysarg_sdlcode(k);
-  if (!syskbd_up) return -1;
-
-  j = 0;
-  while (keys[i] != '\0' && keys[i] != '-' && j + 1 < sizeof k) k[j++] = keys[i++];
-  if (keys[i++] == '\0') return -1;
-  k[j] = '\0';
-  syskbd_down = sysarg_sdlcode(k);
-  if (!syskbd_down) return -1;
-
-  j = 0;
-  while (keys[i] != '\0' && keys[i] != '-' && j + 1 < sizeof k) k[j++] = keys[i++];
-  if (keys[i] != '\0') return -1;
-  k[j] = '\0';
-  syskbd_fire = sysarg_sdlcode(k);
-  if (!syskbd_fire) return -1;
-
-  return 0;
-}
-
-/*
  * Read and process arguments
  */
 void
@@ -145,33 +65,11 @@ sysarg_init(int argc, char **argv)
 
   for (i = 1; i < argc; i++) {
 
-    if (!strcmp(argv[i], "-fullscreen")) {
-      sysarg_args_fullscreen = 1;
-    }
-
-    else if (!strcmp(argv[i], "-help") ||
-	     !strcmp(argv[i], "-h")) {
-      sysarg_fail("help");
-    }
-
-    else if (!strcmp(argv[i], "-speed")) {
+    if (!strcmp(argv[i], "-speed")) {
       if (++i == argc) sysarg_fail("missing speed value");
       sysarg_args_period = atoi(argv[i]) - 1;
       if (sysarg_args_period < 0 || sysarg_args_period > 99)
 	sysarg_fail("invalid speed value");
-    }
-
-    else if (!strcmp(argv[i], "-keys")) {
-      if (++i == argc) sysarg_fail("missing key codes");
-      if (sysarg_scankeys(argv[i]) == -1)
-	sysarg_fail("invalid key codes");
-    }
-
-    else if (!strcmp(argv[i], "-zoom")) {
-      if (++i == argc) sysarg_fail("missing zoom value");
-      sysarg_args_zoom = atoi(argv[i]);
-      if (sysarg_args_zoom < 1 || sysarg_args_zoom > SYSVID_MAXZOOM)
-	sysarg_fail("invalid zoom value");
     }
 
     else if (!strcmp(argv[i], "-map")) {

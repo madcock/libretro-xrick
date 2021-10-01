@@ -41,7 +41,6 @@ SOURCES_C := \
 	$(CORE_DIR)/src/draw.c \
 	$(CORE_DIR)/src/maps.c \
 	$(CORE_DIR)/src/sysvid.c \
-	$(CORE_DIR)/src/syskbd.c \
 	$(CORE_DIR)/src/control.c \
 	$(CORE_DIR)/src/system.c \
 	$(CORE_DIR)/src/scroller.c \

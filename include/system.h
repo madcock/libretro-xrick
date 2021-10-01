@@ -77,22 +77,8 @@ extern void sysvid_init(void);
 extern void sysvid_shutdown(void);
 extern void sysvid_update(rect_t *);
 extern void sysvid_clear(void);
-extern void sysvid_zoom(S8);
-extern void sysvid_toggleFullscreen(void);
 extern void sysvid_setGamePalette(void);
 extern void sysvid_setPalette(img_color_t *, U16);
-
-/*
- * keyboard section
- */
-extern U8 syskbd_up;
-extern U8 syskbd_down;
-extern U8 syskbd_left;
-extern U8 syskbd_right;
-extern U8 syskbd_pause;
-extern U8 syskbd_end;
-extern U8 syskbd_xtra;
-extern U8 syskbd_fire;
 
 /*
  * sound section
