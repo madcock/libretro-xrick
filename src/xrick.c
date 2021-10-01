@@ -14,20 +14,18 @@
 #include "system.h"
 #include "game.h"
 
-#include <SDL.h>
-
 /*
  * main
  */
 int
 skel_main(int argc, char *argv[])
 {
-	sys_init(argc, argv);
-	if (sysarg_args_data)
-		data_setpath(sysarg_args_data);
-	else
-		data_setpath("data.zip");
-	return 0;
+   sys_init(argc, argv);
+   if (sysarg_args_data)
+      data_setpath(sysarg_args_data);
+   else
+      data_setpath("data.zip");
+   return 0;
 }
 
 /* eof */

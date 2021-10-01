@@ -67,7 +67,6 @@ extern U32 sys_gettime(void);
 /*
  * video section
  */
-#define SYSVID_ZOOM 1
 #define SYSVID_MAXZOOM 4
 #define SYSVID_WIDTH 320
 #define SYSVID_HEIGHT 200
@@ -112,8 +111,6 @@ extern void syssnd_free(sound_t *);
 extern int sysarg_args_period;
 extern int sysarg_args_map;
 extern int sysarg_args_submap;
-extern int sysarg_args_fullscreen;
-extern int sysarg_args_zoom;
 #ifdef ENABLE_SOUND
 extern int sysarg_args_nosound;
 extern int sysarg_args_vol;

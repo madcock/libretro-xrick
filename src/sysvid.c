@@ -32,10 +32,6 @@ static SDL_Color palette[256];
 static SDL_Surface *screen;
 static U32 videoFlags;
 
-static U8 zoom = SYSVID_ZOOM; /* actual zoom level */
-static U8 szoom = 0;  /* saved zoom level */
-static U8 fszoom = 0;  /* fullscreen zoom level */
-
 #include "img_icon.e"
 
 /*
@@ -82,43 +78,44 @@ static U8 BLUE[] = { 0x00, 0x00, 0x68, 0x68,
 /*
  * Initialize screen
  */
-static
-SDL_Surface *initScreen(U16 w, U16 h, U8 bpp, U32 flags)
+static SDL_Surface *initScreen(U16 w, U16 h, U8 bpp, U32 flags)
 {
-  return SDL_CreateRGBSurface( flags,w, h,bpp , 0x00ff0000,0x0000ff00,0xff,0xff000000);
+   return SDL_CreateRGBSurface( flags,w, h,bpp , 0x00ff0000,0x0000ff00,0xff,0xff000000);
 }
 
 void
 sysvid_setPalette(img_color_t *pal, U16 n)
 {
-  U16 i;
+   U16 i;
 
-  for (i = 0; i < n; i++) {
-    palette[i].r = pal[i].r;
-    palette[i].g = pal[i].g;
-    palette[i].b = pal[i].b;
-  }
- SDL_SetPalette(screen,0, (SDL_Color *)&palette, 0, n);
+   for (i = 0; i < n; i++)
+   {
+      palette[i].r = pal[i].r;
+      palette[i].g = pal[i].g;
+      palette[i].b = pal[i].b;
+   }
+   SDL_SetPalette(screen,0, (SDL_Color *)&palette, 0, n);
 }
 
 void
 sysvid_restorePalette()
 {
- SDL_SetPalette(screen,0, (SDL_Color *)&palette, 0, 256);
+   SDL_SetPalette(screen,0, (SDL_Color *)&palette, 0, 256);
 }
 
 void
 sysvid_setGamePalette()
 {
-  U8 i;
-  img_color_t pal[256];
+   U8 i;
+   img_color_t pal[256];
 
-  for (i = 0; i < 32; ++i) {
-    pal[i].r = RED[i];
-    pal[i].g = GREEN[i];
-    pal[i].b = BLUE[i];
-  }
-  sysvid_setPalette(pal, 32);
+   for (i = 0; i < 32; ++i)
+   {
+      pal[i].r = RED[i];
+      pal[i].g = GREEN[i];
+      pal[i].b = BLUE[i];
+   }
+   sysvid_setPalette(pal, 32);
 }
 
 /*
@@ -135,33 +132,26 @@ sysvid_chkvm(void)
 void
 sysvid_init(void)
 {
-  SDL_Surface *s;
-  U8 *mask, tpix;
-  U32 len, i;
+   SDL_Surface *s;
+   U8 *mask, tpix;
+   U32 len, i;
 
-  /* SDL */
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) < 0)
-    sys_panic("xrick/video: could not init SDL\n");
-  /* video modes and screen */
-  videoFlags = SDL_HWSURFACE|SDL_HWPALETTE;
-  fszoom = zoom =1;
-  if (sysarg_args_zoom)
-    zoom = sysarg_args_zoom;
-  if (sysarg_args_fullscreen) {
-    videoFlags |= SDL_FULLSCREEN;
-    szoom = zoom;
-    zoom = fszoom;
-  }
-  screen = initScreen(SYSVID_WIDTH * zoom,
-		      SYSVID_HEIGHT * zoom,
-		      8, videoFlags);
+   /* SDL */
+   if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER) < 0)
+      sys_panic("xrick/video: could not init SDL\n");
+   /* video modes and screen */
+   videoFlags = SDL_HWSURFACE|SDL_HWPALETTE;
+   screen     = initScreen(
+         SYSVID_WIDTH,
+         SYSVID_HEIGHT,
+         8, videoFlags);
 
-  /*
-   * create v_ frame buffer
-   */
-  sysvid_fb = malloc(SYSVID_WIDTH * SYSVID_HEIGHT);
-  if (!sysvid_fb)
-    sys_panic("xrick/video: sysvid_fb malloc failed\n");
+   /*
+    * create v_ frame buffer
+    */
+   sysvid_fb = malloc(SYSVID_WIDTH * SYSVID_HEIGHT);
+   if (!sysvid_fb)
+      sys_panic("xrick/video: sysvid_fb malloc failed\n");
 }
 
 /*
@@ -170,10 +160,11 @@ sysvid_init(void)
 void
 sysvid_shutdown(void)
 {
-  free(sysvid_fb);
-  sysvid_fb = NULL;
+   if (sysvid_fb)
+      free(sysvid_fb);
+   sysvid_fb = NULL;
 
-  SDL_Quit();
+   SDL_Quit();
 }
 
 extern SDL_Surface *sdlscrn; 
@@ -189,66 +180,53 @@ void blit(void)
 void
 sysvid_update(rect_t *rects)
 {
-  static SDL_Rect area;
-  U16 x, y, xz, yz;
-  U8 *p, *q, *p0, *q0;
+   static SDL_Rect area;
+   U16 x, y, xz, yz;
+   U8 *p, *q, *p0, *q0;
 
-  if (rects == NULL)
-    return;
+   if (!rects)
+      return;
 
-  if (SDL_LockSurface(screen) == -1)
-    sys_panic("xrick/panic: SDL_LockSurface failed\n");
+   if (SDL_LockSurface(screen) == -1)
+      sys_panic("xrick/panic: SDL_LockSurface failed\n");
 
-  while (rects) {
-    p0 = sysvid_fb;
-    p0 += rects->x + rects->y * SYSVID_WIDTH;
-    q0 = (U8 *)screen->pixels;
-    q0 += (rects->x + rects->y * SYSVID_WIDTH * zoom) * zoom;
+   while (rects)
+   {
+      p0  = sysvid_fb;
+      p0 += rects->x + rects->y * SYSVID_WIDTH;
+      q0  = (U8 *)screen->pixels;
+      q0 += (rects->x + rects->y * SYSVID_WIDTH);
 
-    for (y = rects->y; y < rects->y + rects->height; y++) {
-      for (yz = 0; yz < zoom; yz++) {
-	p = p0;
-	q = q0;
-	for (x = rects->x; x < rects->x + rects->width; x++) {
-	  for (xz = 0; xz < zoom; xz++) {
-	    *q = *p;
-	    q++;
-	  }
-	  p++;
-	}
-	q0 += SYSVID_WIDTH * zoom;
-      }
-      p0 += SYSVID_WIDTH;
-    }
-
-#if 0
-    IFDEBUG_VIDEO2(
-    for (y = rects->y; y < rects->y + rects->height; y++)
-      for (yz = 0; yz < zoom; yz++) {
-	p = (U8 *)screen->pixels + rects->x * zoom + (y * zoom + yz) * SYSVID_WIDTH * zoom;
-	*p = 0x01;
-	*(p + rects->width * zoom - 1) = 0x01;
+      for (y = rects->y; y < rects->y + rects->height; y++)
+      {
+         for (yz = 0; yz < 1; yz++)
+         {
+            p = p0;
+            q = q0;
+            for (x = rects->x; x < rects->x + rects->width; x++)
+            {
+               for (xz = 0; xz < 1; xz++)
+               {
+                  *q = *p;
+                  q++;
+               }
+               p++;
+            }
+            q0 += SYSVID_WIDTH;
+         }
+         p0 += SYSVID_WIDTH;
       }
 
-    for (x = rects->x; x < rects->x + rects->width; x++)
-      for (xz = 0; xz < zoom; xz++) {
-	p = (U8 *)screen->pixels + x * zoom + xz + rects->y * zoom * SYSVID_WIDTH * zoom;
-	*p = 0x01;
-	*(p + ((rects->height * zoom - 1) * zoom) * SYSVID_WIDTH) = 0x01;
-      }
-    );
-#endif
+      area.x = rects->x;
+      area.y = rects->y;
+      area.h = rects->height;
+      area.w = rects->width;
+      SDL_UpdateRects(screen, 1, &area);
 
-    area.x = rects->x * zoom;
-    area.y = rects->y * zoom;
-    area.h = rects->height * zoom;
-    area.w = rects->width * zoom;
-    SDL_UpdateRects(screen, 1, &area);
+      rects = rects->next;
+   }
 
-    rects = rects->next;
-  }
-
-  SDL_UnlockSurface(screen);
+   SDL_UnlockSurface(screen);
 }
 
 
@@ -259,5 +237,5 @@ sysvid_update(rect_t *rects)
 void
 sysvid_clear(void)
 {
-  memset(sysvid_fb, 0, SYSVID_WIDTH * SYSVID_HEIGHT);
+   memset(sysvid_fb, 0, SYSVID_WIDTH * SYSVID_HEIGHT);
 }
