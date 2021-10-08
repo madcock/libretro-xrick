@@ -116,7 +116,6 @@
 #  ifndef Z_SOLO
 #    define uncompress            z_uncompress
 #  endif
-#  define zError                z_zError
 #  ifndef Z_SOLO
 #    define zcalloc               z_zcalloc
 #    define zcfree                z_zcfree
