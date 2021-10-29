@@ -301,6 +301,9 @@ sound_t *syssnd_load(char *name)
    sound_t *s     = malloc(sizeof(sound_t));
    data_file_t *f = data_file_open(name);
 
+   if (!s || !f)
+      return NULL;
+
    data_file_read(f, &head, 1, WAV_HEADER_SIZE);
 
    s->len         = retro_le_to_cpu32(head.Subchunk2Size);
