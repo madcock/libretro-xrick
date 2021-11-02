@@ -11,8 +11,6 @@
  * You must not remove this notice, or any other, from this software.
  */
 
-#include <stdio.h>
-
 #include "system.h"
 #include "game.h"
 #include "screens.h"

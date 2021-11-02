@@ -1,10 +1,12 @@
 
-int Retro_SetColors(SDL_Surface *surface, SDL_Color *colors, int firstcolor, int ncolors)
+int Retro_SetColors(SDL_Surface *surface,
+      SDL_Color *colors, int firstcolor, int ncolors)
 {
    return 0;
 }
 
-int Retro_SetPalette(SDL_Surface * surface, int flags, const SDL_Color * colors,int firstcolor, int ncolors)
+int Retro_SetPalette(SDL_Surface * surface,
+      int flags, const SDL_Color * colors,int firstcolor, int ncolors)
 {
 
    SDL_Palette * palette= surface->format->palette;
@@ -37,9 +39,7 @@ unsigned int Retro_MapRGB(SDL_PixelFormat *a, int r, int g, int b)
       return RGB565( (r)>>3, (g)>>3, (b)>>3);
    else if( a->BitsPerPixel == 32 )
       return r<<16|g<<8|b;
-   else if( a->BitsPerPixel == 8 )
-      return 0;//TODO closest match in lut
-   else return 0;
+   return 0;
 }
 
 static const char *cross[] = {
@@ -71,11 +71,15 @@ void draw_cross(SDL_Surface * surf,int x,int y)
    int dx=32,dy=20;
    unsigned  color;
 
-   for(j=y;j<y+dy;j++){
+   for(j=y;j<y+dy;j++)
+   {
       idx=0;
-      for(i=x;i<x+dx;i++){
-         if(cross[j-y][idx]=='.')SDL_DrawPixel(surf,i,j,SDL_MapRGB(surf->format, 255, 255, 255));
-         else if(cross[j-y][idx]=='X')SDL_DrawPixel(surf,i,j,SDL_MapRGB(surf->format, 0, 0, 0));
+      for(i=x;i<x+dx;i++)
+      {
+         if(cross[j-y][idx]=='.')
+            SDL_DrawPixel(surf,i,j,SDL_MapRGB(surf->format, 255, 255, 255));
+         else if(cross[j-y][idx]=='X')
+            SDL_DrawPixel(surf,i,j,SDL_MapRGB(surf->format, 0, 0, 0));
          idx++;			
       }
    }
@@ -85,30 +89,44 @@ void draw_cross(SDL_Surface * surf,int x,int y)
 
 void Retro_Fillrect(SDL_Surface * surf,SDL_Rect *rect,unsigned int col)
 {
-   if(rect==NULL)SDL_DrawFRect(surf,surf->clip_rect.x,surf->clip_rect.y,surf->clip_rect.w ,surf->clip_rect.h,col); 
-   else SDL_DrawFRect(surf,rect->x,rect->y,rect->w ,rect->h,col); 
+   if(!rect)
+      SDL_DrawFRect(surf,
+            surf->clip_rect.x,
+            surf->clip_rect.y,
+            surf->clip_rect.w,
+            surf->clip_rect.h,col); 
+   else
+      SDL_DrawFRect(surf,
+            rect->x,
+            rect->y,
+            rect->w,
+            rect->h,col); 
 }
 
 void Retro_FreeSurface(SDL_Surface *surf )
 {   
-
-   printf("free surf format palette color\n");
-   if(surf->format->palette->colors)	
-      free(surf->format->palette->colors);
-
-   printf("free surf format palette \n");
-   if(surf->format->palette)	
-      free(surf->format->palette);
-   printf("free surf format  \n");
-   if(surf->format)	
+   if (!surf)
+      return;
+   if (surf->format)
+   {
+      if (surf->format->palette)	
+      {
+         if(surf->format->palette->colors)	
+         {
+            free(surf->format->palette->colors);
+            surf->format->palette->colors = NULL;
+         }
+         free(surf->format->palette);
+         surf->format->palette = NULL;
+      }
       free(surf->format);
-   printf("free surf pixel  \n"); 
+      surf->format          = NULL;
+   }
+
    if(surf->pixels)
       free(surf->pixels);       
-   printf("free surf  \n"); 
-   if(surf)	
-      free(surf);	
-
+   surf->pixels = NULL;
+   free(surf);	
 }
 
 void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr)
@@ -145,9 +163,9 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
       dst.w=dr->w;
       dst.h=dr->h;
    }
-   //printf("s(%d,%d,%d,%d) d(%d,%d,%d,%d)\n",src.x,src.y,src.w,src.h,dst.x,dst.y,dst.w,dst.h);
    pout=(unsigned char *)ds->pixels+(dst.x*dBPP+dst.y*ds->w*dBPP);
    pin =(unsigned char *)ss->pixels+(src.x*sBPP+src.y*ss->w*sBPP);
+
 #if 1
    //COLORKEY
    if(ss->flags&SDL_SRCCOLORKEY)
@@ -173,7 +191,6 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
                unsigned int mcoul=ss->format->palette->colors[*pin].r<<16|\
                                   ss->format->palette->colors[*pin].g<<8|\
                                   ss->format->palette->colors[*pin].b;
-               //printf("c:%x- ",mcoul);
                retro_unaligned32 (pout) = mcoul;
                pout += 4;
                pin++;
@@ -195,6 +212,7 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
       return;
    }
 #endif
+
    for(y=0;y<src.h;y++)
    {
       for(x=0;x<src.w;x++)
@@ -213,7 +231,6 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
                unsigned int mcoul=ss->format->palette->colors[*pin].r<<16|\
                                   ss->format->palette->colors[*pin].g<<8|\
                                   ss->format->palette->colors[*pin].b;
-               //printf("c:%x- ",mcoul);
                retro_unaligned32 (pout) = mcoul;
                pout += 4;
                pin++;
@@ -250,31 +267,20 @@ SDL_Surface *Retro_CreateRGBSurface( int w,int h, int d, int rm,int rg,int rb,in
    SDL_Surface *bitmp = (SDL_Surface *) calloc(1, sizeof(*bitmp));
 
    if (bitmp == NULL)
-   {
-      printf("tex surface failed");
       return NULL;
-   }
 
    bitmp->format = calloc(1,sizeof(*bitmp->format));
    if (bitmp->format == NULL)
-   {
-      printf("tex format failed");
       return NULL;
-   }
 
    bitmp->format->palette = calloc(1,sizeof(*bitmp->format->palette));
    if (bitmp->format->palette == NULL)
-   {
-      printf("tex format palette failed");
       return NULL;
-   }
-   printf("create palette\n");
    bitmp->format->palette->ncolors=256;
    bitmp->format->palette->colors=malloc(1024);
    bitmp->format->palette->version=0;
    bitmp->format->palette->refcount=0;
    memset(bitmp->format->palette->colors,0x0,1024);
-   printf("fill surf %d \n",bitmp->format->palette->colors[255].r);
    if(d==16)
    {
       bitmp->format->BitsPerPixel = 16;
@@ -302,7 +308,6 @@ SDL_Surface *Retro_CreateRGBSurface( int w,int h, int d, int rm,int rg,int rb,in
       bitmp->pixels=malloc(sizeof(unsigned char)*h*w*2);//  (unsigned char *)&Retro_Screen[0];
       if (!bitmp->pixels)
       {
-         printf("failed alloc pixels\n");	
          Retro_FreeSurface(bitmp);            
          return NULL;
       }
@@ -335,7 +340,6 @@ SDL_Surface *Retro_CreateRGBSurface( int w,int h, int d, int rm,int rg,int rb,in
       bitmp->pixels=malloc(sizeof(unsigned char)*h*w*4);//  (unsigned char *)&Retro_Screen[0];
       if (!bitmp->pixels)
       {
-         printf("failed alloc pixels\n");	
          Retro_FreeSurface(bitmp);            
          return NULL;
       }
@@ -366,7 +370,6 @@ SDL_Surface *Retro_CreateRGBSurface( int w,int h, int d, int rm,int rg,int rb,in
       bitmp->pixels=malloc(sizeof(unsigned char)*h*w*1);//  (unsigned char *)&Retro_Screen[0];
       if (!bitmp->pixels)
       {
-         printf("failed alloc pixels\n");	
          Retro_FreeSurface(bitmp);            
          return NULL;
       }
@@ -378,36 +381,22 @@ SDL_Surface *Retro_CreateRGBSurface( int w,int h, int d, int rm,int rg,int rb,in
    bitmp->clip_rect.w=w;
    bitmp->clip_rect.h=h;
 
-   //printf("fin prepare tex:%dx%dx%d\n",bitmp->w,bitmp->h,bitmp->format->BytesPerPixel);
    return bitmp;
 }
 
 SDL_Surface *Retro_SetVideoMode(int w,int h,int b)
 {
-   SDL_Surface *bitmp;
-
-   bitmp = (SDL_Surface *) calloc(1, sizeof(*bitmp));
+   SDL_Surface *bitmp = (SDL_Surface *) calloc(1, sizeof(*bitmp));
    if (bitmp == NULL)
-   {
-      printf("tex surface failed");
       return NULL;
-   }
 
    bitmp->format = calloc(1,sizeof(*bitmp->format));
    if (bitmp->format == NULL)
-   {
-      printf("tex format failed");
       return NULL;
-   }
-
 
    bitmp->format->palette = calloc(1,sizeof(*bitmp->format->palette));
    if (bitmp->format->palette == NULL)
-   {
-      printf("tex format palette failed");
       return NULL;
-   }
-   printf("create palette\n");
    bitmp->format->palette->ncolors=256;
    bitmp->format->palette->colors=malloc(1024);
    bitmp->format->palette->version=0;
@@ -474,7 +463,6 @@ SDL_Surface *Retro_SetVideoMode(int w,int h,int b)
       bitmp->clip_rect.h=h;
    }
 
-   printf("SetvideoMode fin prepare tex:%dx%dx%d pitch:%d\n",bitmp->w,bitmp->h,bitmp->format->BytesPerPixel,bitmp->pitch);
    return bitmp;
 }      
 

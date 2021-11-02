@@ -11,7 +11,6 @@
  * You must not remove this notice, or any other, from this software.
  */
 
-#include <stdio.h>    /* printf */
 #include <stdlib.h>
 #include <signal.h>
 
@@ -23,8 +22,7 @@ extern long GetTicks(void);
 /*
  * Return number of microseconds elapsed since first call
  */
-U32
-sys_gettime(void)
+U32 sys_gettime(void)
 {
   static U32 ticks_base = 0;
   U32 ticks             = GetTicks();
@@ -38,8 +36,7 @@ sys_gettime(void)
 /*
  * Initialize system
  */
-void
-sys_init(int argc, char **argv)
+void sys_init(int argc, char **argv)
 {
 	sysarg_init(argc, argv);
 	sysvid_init();
@@ -55,8 +52,7 @@ sys_init(int argc, char **argv)
 /*
  * Shutdown system
  */
-void
-sys_shutdown(void)
+void sys_shutdown(void)
 {
 #ifdef ENABLE_SOUND
 	syssnd_shutdown();

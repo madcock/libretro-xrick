@@ -238,7 +238,7 @@ void SDL_Draw_text(SDL_Surface *buffer,int x,int y,unsigned  fgcol,
    char text[256];	   	
    va_list	ap;			
 
-   if (string == NULL)
+   if (!string)
       return;
 
    va_start(ap, string);		
