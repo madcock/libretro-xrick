@@ -186,6 +186,15 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
                if(key!=*pin)*pout=*pin;
                pout++;pin++;
             }
+            else if(sBPP==1 && dBPP==2)
+            {
+               unsigned int mcoul=(ss->format->palette->colors[*pin].r>>3)<<11|\
+                                  (ss->format->palette->colors[*pin].g>>3)<<6|\
+                                  (ss->format->palette->colors[*pin].b>>3);
+               retro_unaligned16 (pout) = mcoul;
+               pout += 2;
+               pin++;
+            }
             else if(sBPP==1 && dBPP==4)
             {
                unsigned int mcoul=ss->format->palette->colors[*pin].r<<16|\
@@ -233,6 +242,15 @@ void Retro_BlitSurface(SDL_Surface *ss,SDL_Rect* sr,SDL_Surface *ds,SDL_Rect* dr
                                   ss->format->palette->colors[*pin].b;
                retro_unaligned32 (pout) = mcoul;
                pout += 4;
+               pin++;
+            }
+            else if(sBPP==1 && dBPP==2)
+            {
+               unsigned int mcoul=(ss->format->palette->colors[*pin].r>>3)<<11|\
+                                  (ss->format->palette->colors[*pin].g>>3)<<6|\
+                                  (ss->format->palette->colors[*pin].b>>3);
+               retro_unaligned16 (pout) = mcoul;
+               pout += 2;
                pin++;
             }
             else

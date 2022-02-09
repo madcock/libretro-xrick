@@ -4,7 +4,7 @@ CORE_DIR := $(LOCAL_PATH)/..
 
 include $(CORE_DIR)/Makefile.common
 
-COREFLAGS := -DANDROID -D__LIBRETRO__ $(INCFLAGS) -DWANT_ZLIB -DINLINE="inline"
+COREFLAGS := -DANDROID -D__LIBRETRO__ -DFRONTEND_SUPPORTS_RGB565 $(INCFLAGS) -DWANT_ZLIB -DINLINE="inline"
 
 GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
 ifneq ($(GIT_VERSION)," unknown")

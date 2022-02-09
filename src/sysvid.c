@@ -25,10 +25,10 @@
 #include <memory.h> /* memset */
 #endif
 
-U8 *sysvid_fb; /* frame buffer */
+U8 *sysvid_fb = NULL; /* frame buffer */
 
 static SDL_Color palette[256];
-static SDL_Surface *screen;
+static SDL_Surface *screen = NULL;
 
 #include "img_icon.e"
 
@@ -122,6 +122,10 @@ void sysvid_shutdown(void)
    if (sysvid_fb)
       free(sysvid_fb);
    sysvid_fb = NULL;
+
+   if (screen)
+      SDL_FreeSurface(screen);
+   screen = NULL;
 }
 
 extern SDL_Surface *sdlscrn; 

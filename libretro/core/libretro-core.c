@@ -1,12 +1,18 @@
 #include <libretro.h>
 #include <streams/file_stream.h>
+#include <file/file_path.h>
+#include <string/stdstring.h>
 
 #include "libretro-core.h"
+#include "libretro_core_options.h"
 
 #include "game.h"
+#include "ents.h"
 #include "system.h"
 
-int VIRTUAL_WIDTH ;
+#define VIDEO_WIDTH 256
+#define VIDEO_OFFSET_X ((WINDOW_WIDTH - VIDEO_WIDTH) >> 1)
+
 int retrow=320; 
 int retroh=200;
 #ifdef FRONTEND_SUPPORTS_RGB565
@@ -15,9 +21,29 @@ int retroh=200;
 #define BPP 4
 #endif
 
+static struct retro_input_descriptor input_descriptors[] = {
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT,  "Left" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP,    "Up" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN,  "Down" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT, "Right" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A,     "Jump" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B,     "Fire Gun" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X,     "Jab Stick (+ Left/Right)" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y,     "Set Dynamite" },
+   { 0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START, "Pause" },
+   { 0 },
+};
+
+static bool retro_cheat1 = false;
+static bool retro_cheat2 = false;
+static bool retro_cheat3 = false;
+static bool retro_cheat_pending = false;
+
+static bool retro_crop_borders = false;
+
 extern int SND;
-extern char RPATH[512];
-extern char RETRO_DIR[512];
+static char RPATH[1024];
+static char RETRO_DIR[1024];
 
 SDL_Surface *sdlscrn; 
 
@@ -25,7 +51,6 @@ void SDL_Uninit(void)
 {
    if (sdlscrn)
    {
-
       if(sdlscrn->format)	
       {
          if(sdlscrn->format->palette)	
@@ -41,12 +66,9 @@ void SDL_Uninit(void)
          sdlscrn->pixels=NULL;
 
       free(sdlscrn);
+      sdlscrn = NULL;
    }
 }
-
-const char *retro_save_directory;
-const char *retro_system_directory;
-const char *retro_content_directory;
 
 #include "cmdline.c"
 
@@ -63,25 +85,81 @@ bool libretro_supports_bitmasks = false;
 void retro_set_environment(retro_environment_t cb)
 {
    struct retro_vfs_interface_info vfs_iface_info;
-   struct retro_variable variables[] = {
-      { NULL, NULL },
-   };
+   bool option_cats_supported;
    bool no_content = true;
 
    environ_cb = cb;
 
-   cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_content);
-   cb(RETRO_ENVIRONMENT_SET_VARIABLES, variables);
+   environ_cb(RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME, &no_content);
+
+   libretro_set_core_options(environ_cb, &option_cats_supported);
 
 	vfs_iface_info.required_interface_version = 1;
 	vfs_iface_info.iface                      = NULL;
-	if (cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
+	if (environ_cb(RETRO_ENVIRONMENT_GET_VFS_INTERFACE, &vfs_iface_info))
 		filestream_vfs_init(&vfs_iface_info);
 }
 
-static void update_variables(void)
+static void update_variables(bool startup)
 {
-   /* TODO/FIXME - add core options? */
+   struct retro_variable var    = {0};
+   bool retro_crop_borders_prev = retro_crop_borders;
+   bool retro_cheat1_prev       = retro_cheat1;
+   bool retro_cheat2_prev       = retro_cheat2;
+   bool retro_cheat3_prev       = retro_cheat3;
+
+   /* Crop Borders */
+   var.key            = "xrick_crop_borders";
+   var.value          = NULL;
+   retro_crop_borders = false;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) &&
+       !string_is_empty(var.value) &&
+       string_is_equal(var.value, "enabled"))
+      retro_crop_borders = true;
+
+   if (!startup && (retro_crop_borders != retro_crop_borders_prev))
+   {
+      struct retro_system_av_info av_info;
+      retro_get_system_av_info(&av_info);
+      environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
+   }
+
+   /* Cheat 1: Trainer Mode */
+   var.key      = "xrick_cheat1";
+   var.value    = NULL;
+   retro_cheat1 = false;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) &&
+       !string_is_empty(var.value) &&
+       string_is_equal(var.value, "enabled"))
+      retro_cheat1 = true;
+
+   /* Cheat 2: Invulnerability Mode */
+   var.key      = "xrick_cheat2";
+   var.value    = NULL;
+   retro_cheat2 = false;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) &&
+       !string_is_empty(var.value) &&
+       string_is_equal(var.value, "enabled"))
+      retro_cheat2 = true;
+
+   /* Cheat 3: Expose Mode */
+   var.key      = "xrick_cheat3";
+   var.value    = NULL;
+   retro_cheat3 = false;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) &&
+       !string_is_empty(var.value) &&
+       string_is_equal(var.value, "enabled"))
+      retro_cheat3 = true;
+
+   /* Check if cheat settings have changed */
+   if ((retro_cheat1 != retro_cheat1_prev) ||
+       (retro_cheat2 != retro_cheat2_prev) ||
+       (retro_cheat3 != retro_cheat3_prev))
+      retro_cheat_pending = true;
 }
 
 void retro_reset(void) { }
@@ -91,8 +169,6 @@ void StartTicks(void);
 void retro_init(void)
 {    	
    const char *system_dir      = NULL;
-   const char *content_dir     = NULL;
-   const char *save_dir        = NULL;
 #ifdef FRONTEND_SUPPORTS_RGB565
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 #else
@@ -104,25 +180,9 @@ void retro_init(void)
    /* if defined, use the system directory */
    if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) 
          && system_dir)
-      retro_system_directory=system_dir;		
-
-   /* if defined, use the system directory */
-   if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) 
-         && content_dir)
-      retro_content_directory=content_dir;		
-
-   /* If save directory is defined use it, otherwise use system directory */
-   if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) 
-         && save_dir)
-      retro_save_directory = *save_dir ? save_dir : retro_system_directory;      
+      strlcpy(RETRO_DIR, system_dir, sizeof(RETRO_DIR));
    else
-      // make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
-      retro_save_directory=retro_system_directory;
-
-   if (!retro_system_directory)
-      sprintf(RETRO_DIR, "%s\0",".");
-   else
-      sprintf(RETRO_DIR, "%s\0", retro_system_directory);
+      strlcpy(RETRO_DIR, ".", sizeof(RETRO_DIR));
 
    if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
       exit(0);
@@ -141,6 +201,12 @@ void retro_deinit(void)
    texture_uninit();
 
    libretro_supports_bitmasks = false;
+
+   retro_cheat1 = false;
+   retro_cheat2 = false;
+   retro_cheat3 = false;
+   retro_cheat_pending = false;
+   retro_crop_borders = false;
 }
 
 unsigned retro_api_version(void)
@@ -162,12 +228,26 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
-   struct retro_game_geometry geom   = { retrow, retroh, retrow, retrow,
-      4.0 / 3.0 };
-   struct retro_system_timing timing = { 25.0, 22050.0 };
+   memset(info, 0, sizeof(*info));
 
-   info->geometry = geom;
-   info->timing   = timing;
+   info->timing.fps               = 25.0;
+   info->timing.sample_rate       = 22050.0;
+
+   if (retro_crop_borders)
+   {
+      info->geometry.base_width   = VIDEO_WIDTH;
+      info->geometry.base_height  = retroh;
+      info->geometry.aspect_ratio = 4.0 / 3.0;
+   }
+   else
+   {
+      info->geometry.base_width   = retrow;
+      info->geometry.base_height  = retroh;
+      info->geometry.aspect_ratio = 5.0 / 3.0;
+   }
+
+   info->geometry.max_width       = retrow;
+   info->geometry.max_height      = retroh;
 }
 
 void retro_set_audio_sample(retro_audio_sample_t cb)
@@ -194,38 +274,109 @@ void retro_run(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) 
          && updated)
-      update_variables();
+      update_variables(false);
+
+   if (retro_cheat_pending)
+   {
+      if (game_state != INTRO_MAIN && game_state != INTRO_MAP &&
+          game_state != GAMEOVER && game_state != GETNAME &&
+#ifdef ENABLE_DEVTOOLS
+          game_state != DEVTOOLS &&
+#endif
+          game_state != XRICK && game_state != EXIT)
+      {
+         game_enableCheats(retro_cheat1, retro_cheat2, retro_cheat3);
+         retro_cheat_pending = false;
+      }
+   }
 
    Retro_PollEvent();
 
    game_iterate();
 
    if (sdlscrn)
-      video_cb(sdlscrn->pixels,retrow,retroh, retrow<< PIXEL_BYTES);
+   {
+      if (retro_crop_borders)
+         video_cb(sdlscrn->pixels + (VIDEO_OFFSET_X * BPP),
+               VIDEO_WIDTH, retroh, retrow << PIXEL_BYTES);
+      else
+         video_cb(sdlscrn->pixels,
+               retrow, retroh, retrow << PIXEL_BYTES);
+   }
 }
 
 bool retro_load_game(const struct retro_game_info *info)
 {
-   update_variables();
+   environ_cb(RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS,
+         input_descriptors);
+
+   if (info && !string_is_empty(info->path))
+      snprintf(RPATH, sizeof(RPATH), "\"xrick\" \"-data\" \"%s\"", info->path);
+   else
+   {
+      char data_path[1024];
+      data_path[0] = '\0';
+
+      fill_pathname_join_special_ext(data_path,
+            RETRO_DIR, "xrick", "data", ".zip",
+            sizeof(data_path));
+
+      if (!path_is_valid(data_path))
+      {
+         unsigned msg_interface_version = 0;
+         environ_cb(RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION,
+               &msg_interface_version);
+
+         if (msg_interface_version >= 1)
+         {
+            struct retro_message_ext msg = {
+               "XRick game files missing from frontend system directory",
+               3000,
+               3,
+               RETRO_LOG_ERROR,
+               RETRO_MESSAGE_TARGET_ALL,
+               RETRO_MESSAGE_TYPE_NOTIFICATION,
+               -1
+            };
+            environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE_EXT, &msg);
+         }
+         else
+         {
+            struct retro_message msg = {
+               "XRick game files missing from frontend system directory",
+               180
+            };
+            environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
+         }
+
+         goto error;
+      }
+
+      snprintf(RPATH, sizeof(RPATH), "\"xrick\" \"-data\" \"%s/xrick/data.zip\"", RETRO_DIR);
+   }
 
 #ifdef FRONTEND_SUPPORTS_RGB565
-   memset(Retro_Screen,0,WINDOW_WIDTH*WINDOW_HEIGHT*2);
-   sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT, 16, 0);
+   memset(Retro_Screen, 0, WINDOW_WIDTH * WINDOW_HEIGHT * 2);
+   sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 16, 0);
 #else
-   memset(Retro_Screen,0,WINDOW_WIDTH*WINDOW_HEIGHT*2*2);
-   sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH,WINDOW_HEIGHT ,32, 0);
+   memset(Retro_Screen, 0, WINDOW_WIDTH * WINDOW_HEIGHT * 2 * 2);
+   sdlscrn = SDL_SetVideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 0);
 #endif
 
+   update_variables(true);
+
    SND=1;
-   if (info)
-      sprintf(RPATH,"\"xrick\" \"-data\" \"%s\"\0", info->path);
-   else
-      sprintf(RPATH,"\"xrick\" \"-data\" \"%s/data.zip\"\0", retro_system_directory);
    if (pre_main(RPATH) == -1)
-      return false;
+      goto error;
+
    game_run();
 
    return true;
+
+error:
+   if (sdlscrn)
+      SDL_Uninit();
+   return false;
 }
 
 void freedata(void);
@@ -235,6 +386,9 @@ void retro_unload_game(void)
    freedata(); /* free cached data */
    data_closepath();
    sys_shutdown();
+
+   rects_free(ent_rects);
+   ent_rects = NULL;
 }
 
 unsigned retro_get_region(void)
@@ -267,11 +421,27 @@ bool retro_unserialize(const void *data_, size_t size)
 
 void *retro_get_memory_data(unsigned id)
 {
+   switch (id)
+   {
+      case RETRO_MEMORY_SAVE_RAM:
+         return (void*)&game_hscores;
+      default:
+         break;
+   }
+
    return NULL;
 }
 
 size_t retro_get_memory_size(unsigned id)
 {
+   switch (id)
+   {
+      case RETRO_MEMORY_SAVE_RAM:
+         return sizeof(game_hscores);
+      default:
+         break;
+   }
+
    return 0;
 }
 
