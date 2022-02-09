@@ -17,7 +17,7 @@ extern uint16_t Retro_Screen[WINDOW_WIDTH*WINDOW_HEIGHT];
 #define PIXEL_BYTES 1
 #define PIXEL_TYPE uint16_t
 #else
-extern unsigned int Retro_Screen[WINDOW_WIDTH*WINDOW_HEIGHT];
+extern uint32_t Retro_Screen[WINDOW_WIDTH*WINDOW_HEIGHT];
 #define PIXEL_BYTES 2
 #define PIXEL_TYPE uint32_t 
 #endif 

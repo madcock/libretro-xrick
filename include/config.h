@@ -23,10 +23,8 @@
 /* sound support */
 #define ENABLE_SOUND
 
-#ifndef __LIBRETRO__
 /* cheats support */
 #define ENABLE_CHEATS
-#endif
 
 /* development tools */
 #undef ENABLE_DEVTOOLS

@@ -29,7 +29,8 @@ STATIC_LINKING_LINK=1
 endif
 endif
 
-#CFLAGS += -DFRONTEND_SUPPORTS_RGB565
+CFLAGS += -DFRONTEND_SUPPORTS_RGB565
+
 ifeq ($(platform), android)
    CC = arm-linux-androideabi-gcc
    AR = @arm-linux-androideabi-ar
@@ -130,8 +131,8 @@ else ifeq ($(platform), ctr)
 	CXX = $(DEVKITARM)/bin/arm-none-eabi-g++$(EXE_EXT)
 	AR = $(DEVKITARM)/bin/arm-none-eabi-ar$(EXE_EXT)
 	DEFINES += -D_3DS -DARM11 -march=armv6k -mtune=mpcore -mfloat-abi=hard
-	CFLAGS += $(DEFINES) -DFRONTEND_SUPPORTS_RGB565
-	CXXFLAGS += $(DEFINES) -DFRONTEND_SUPPORTS_RGB565
+	CFLAGS += $(DEFINES)
+	CXXFLAGS += $(DEFINES)
 	STATIC_LINKING = 1
 	STATIC_LINKING_LINK = 1
 

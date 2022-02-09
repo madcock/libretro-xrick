@@ -33,10 +33,26 @@
 #define GAME_BOMBS_INIT 6
 #define GAME_BULLETS_INIT 6
 
+typedef enum {
+#ifdef ENABLE_DEVTOOLS
+  DEVTOOLS,
+#endif
+  XRICK,
+  INIT_GAME, INIT_BUFFER,
+  INTRO_MAIN, INTRO_MAP,
+  PAUSE_PRESSED1, PAUSE_PRESSED1B, PAUSED, PAUSE_PRESSED2,
+  PLAY0, PLAY1, PLAY2, PLAY3,
+  CHAIN_SUBMAP, CHAIN_MAP, CHAIN_END,
+  SCROLL_UP, SCROLL_DOWN,
+  RESTART, GAMEOVER, GETNAME, EXIT
+} game_state_t;
+
 typedef struct {
   U32 score;
   U8 name[10];
 } hscore_t;
+
+extern game_state_t game_state; /* current game state */
 
 extern U8 game_lives;      /* lives counter */
 extern U8 game_bombs;      /* bombs counter */
@@ -62,12 +78,12 @@ extern void game_run(void);
 extern void game_setmusic(char *name, U8 loop);
 extern void game_stopmusic(void);
 
-
 #ifdef ENABLE_CHEATS
 extern U8 game_cheat1;     /* infinite lives, bombs and bullets */
 extern U8 game_cheat2;     /* never die */
 extern U8 game_cheat3;     /* highlight sprites */
-extern void game_toggleCheat(U8);
+extern void game_toggleCheat(U8 nbr);
+extern void game_enableCheats(U8 enable1, U8 enable2, U8 enable3);
 #endif
 
 #ifdef ENABLE_SOUND

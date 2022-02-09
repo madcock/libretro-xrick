@@ -33,28 +33,11 @@
 #include "devtools.h"
 #endif
 
-
-/*
- * local typedefs
- */
-typedef enum {
-#ifdef ENABLE_DEVTOOLS
-  DEVTOOLS,
-#endif
-  XRICK,
-  INIT_GAME, INIT_BUFFER,
-  INTRO_MAIN, INTRO_MAP,
-  PAUSE_PRESSED1, PAUSE_PRESSED1B, PAUSED, PAUSE_PRESSED2,
-  PLAY0, PLAY1, PLAY2, PLAY3,
-  CHAIN_SUBMAP, CHAIN_MAP, CHAIN_END,
-  SCROLL_UP, SCROLL_DOWN,
-  RESTART, GAMEOVER, GETNAME, EXIT
-} game_state_t;
-
-
 /*
  * global vars
  */
+game_state_t game_state;
+
 U8 game_period = 0;
 U8 game_waitevt = FALSE;
 rect_t *game_rects = NULL;
@@ -121,9 +104,8 @@ sound_t *WAV_ENTITY[10];
  * local vars
  */
 static U8 isave_frow;
-static game_state_t game_state;
 #ifdef ENABLE_SOUND
-static sound_t *music_snd;
+static sound_t *music_snd = NULL;
 #endif
 
 
@@ -581,6 +563,35 @@ game_toggleCheat(U8 nbr)
     sysvid_update(&draw_SCREENRECT);
   }
 }
+
+void game_enableCheats(U8 enable1, U8 enable2, U8 enable3)
+{
+  if (game_state != INTRO_MAIN && game_state != INTRO_MAP &&
+      game_state != GAMEOVER && game_state != GETNAME &&
+#ifdef ENABLE_DEVTOOLS
+      game_state != DEVTOOLS &&
+#endif
+      game_state != XRICK && game_state != EXIT)
+   {
+      if (enable1)
+      {
+         game_cheat1 = 1;
+         game_lives = 6;
+         game_bombs = 6;
+         game_bullets = 6;
+      }
+      else
+         game_cheat1 = 0;
+
+      game_cheat2 = enable2;
+      game_cheat3 = enable3;
+
+      draw_infos();
+      /* FIXME this should probably only raise a flag ... */
+      /* plus we only need to update INFORECT not the whole screen */
+      sysvid_update(&draw_SCREENRECT);
+   }
+}
 #endif
 
 #ifdef ENABLE_SOUND
@@ -590,7 +601,7 @@ game_toggleCheat(U8 nbr)
 void
 game_setmusic(char *name, U8 loop)
 {
-	U8 channel;
+	S8 channel;
 
 	if (music_snd)
 		game_stopmusic();

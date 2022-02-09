@@ -3,10 +3,6 @@
 #include "sdl_primitives.h"
 
 #include "SDL.h"
-extern const char *retro_save_directory;
-extern const char *retro_system_directory;
-extern const char *retro_content_directory;
-char RETRO_DIR[512];
  
 //TIME
 #ifdef __PS3__
@@ -28,6 +24,7 @@ char RETRO_DIR[512];
 
 #include "system.h"
 #include "control.h"
+#include "game.h"
 
 #define SETBIT(x,b) x |= (b)
 #define CLRBIT(x,b) x &= ~(b)
@@ -36,11 +33,8 @@ char RETRO_DIR[512];
 #ifdef FRONTEND_SUPPORTS_RGB565
 uint16_t Retro_Screen[WINDOW_WIDTH*WINDOW_HEIGHT];
 #else
-unsigned int Retro_Screen[WINDOW_WIDTH*WINDOW_HEIGHT];
-#endif 
-
-//PATH
-char RPATH[512];
+uint32_t Retro_Screen[WINDOW_WIDTH*WINDOW_HEIGHT];
+#endif
 
 //EMU FLAGS
 int SND; //SOUND ON/OFF
@@ -227,6 +221,18 @@ int Retro_PollEvent(void)
    unsigned joypad_bits;
    unsigned short key = 0;
 
+   bool jump_pressed         = false;
+   bool fire_gun_pressed     = false;
+   bool set_dynamite_pressed = false;
+   bool jab_stick_pressed    = false;
+
+   /* An annoyance - 'Fire Gun' and 'Set Dynamite'
+    * will not register correctly unless a directional
+    * input is triggered on the frame *after* the fire
+    * button is triggered */
+   static bool fire_gun_pressed_prev     = false;
+   static bool set_dynamite_pressed_prev = false;
+
    input_poll_cb();
 
    if (libretro_supports_bitmasks)
@@ -238,35 +244,115 @@ int Retro_PollEvent(void)
          joypad_bits |= input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, i) ? (1 << i) : 0;
    }
 
+   /* If we are currently in a menu-type screen,
+    * then directions are registered normally and
+    * all face buttons trigger a 'fire' input */
+   if ((game_state == INTRO_MAIN) ||
+       (game_state == INTRO_MAP) ||
+       (game_state == GAMEOVER) ||
+       (game_state == GETNAME))
+   {
+      key           = SDLK_UP;
+      Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_UP) ? 0x80: 0;
+      key_latch(key);
+
+      key           = SDLK_DOWN;
+      Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_DOWN) ? 0x80: 0;
+      key_latch(key);
+
+      key           = SDLK_LEFT;
+      Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT) ? 0x80: 0;
+      key_latch(key);
+
+      key           = SDLK_RIGHT;
+      Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT) ? 0x80: 0;
+      key_latch(key);
+
+      key           = SDLK_SPACE;
+      Key_Sate[key] = (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_A)) ||
+                      (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_B)) ||
+                      (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_Y)) ||
+                      (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_X))    ? 0x80: 0;
+      key_latch(key);
+
+      fire_gun_pressed_prev     = false;
+      set_dynamite_pressed_prev = false;
+      return 1;
+   }
+
+   jump_pressed         = (bool)(joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_A));
+   fire_gun_pressed     = (bool)(joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_B));
+   set_dynamite_pressed = (bool)(joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_Y));
+   jab_stick_pressed    = (bool)(joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_X));
+
+   /* Up is triggered when:
+    * - 'Jump' is pressed
+    * - 'Fire Gun' is pressed (prev and current)
+    * - 'Up' is pressed
+    * Up is ignored when:
+    * - 'Set Dynamite' is pressed
+    * - 'Jab Stick' is pressed */
    key           = SDLK_UP;
-   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_UP) ? 0x80: 0;
-   key_latch(key);
-   key           = SDLK_DOWN;
-   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_DOWN) ? 0x80: 0;
-   key_latch(key);
-   key           = SDLK_LEFT;
-   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT) ? 0x80: 0;
-   key_latch(key);
-   key           = SDLK_RIGHT;
-   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT) ? 0x80: 0;
+   Key_Sate[key] = (jump_pressed ||
+                    (fire_gun_pressed && fire_gun_pressed_prev) ||
+                    (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_UP))) &&
+                   !(set_dynamite_pressed || jab_stick_pressed) ? 0x80: 0;
    key_latch(key);
 
+   /* Down is triggered when:
+    * - 'Set Dynamite' is pressed (prev and current)
+    * - 'Down' is pressed
+    * Down is ignored when:
+    * - 'Jump' is pressed
+    * - 'Fire Gun' is pressed
+    * - 'Jab Stick' is pressed */
+   key           = SDLK_DOWN;
+   Key_Sate[key] = ((set_dynamite_pressed && set_dynamite_pressed_prev) ||
+                    (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_DOWN))) &&
+                   !(jump_pressed || fire_gun_pressed || jab_stick_pressed) ? 0x80: 0;
+   key_latch(key);
+
+   /* Left is triggered when:
+    * - 'Left' is pressed
+    * Left is ignored when:
+    * - 'Fire Gun' is pressed
+    * - 'Set Dynamite' is pressed */
+   key           = SDLK_LEFT;
+   Key_Sate[key] = (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_LEFT)) &&
+                   !(fire_gun_pressed || set_dynamite_pressed) ? 0x80: 0;
+   key_latch(key);
+
+   /* Right is triggered when:
+    * - 'Right' is pressed
+    * Right is ignored when:
+    * - 'Fire Gun' is pressed
+    * - 'Set Dynamite' is pressed */
+   key           = SDLK_RIGHT;
+   Key_Sate[key] = (joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_RIGHT)) &&
+                   !(fire_gun_pressed || set_dynamite_pressed) ? 0x80: 0;
+   key_latch(key);
+
+   /* Fire is triggered when:
+    * - 'Fire Gun' is pressed
+    * - 'Set Dynamite' is pressed
+    * - 'Jab Stick' is pressed
+    * Fire is ignored when:
+    * - 'Jump' is pressed */
+   key           = SDLK_SPACE;
+   Key_Sate[key] = (fire_gun_pressed ||
+                    set_dynamite_pressed ||
+                    jab_stick_pressed) &&
+                   !jump_pressed ? 0x80: 0;
+   key_latch(key);
+
+   /* Pause */
    key           = SDLK_p;
    Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_START) ? 0x80: 0;
    key_latch(key);
 
-#if 0
-   key           = SDLK_e;
-   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_SELECT) ? 0x80: 0;
-   key_latch(key);
-#endif
-
-   key           = SDLK_SPACE;
-   Key_Sate[key] = joypad_bits & (1 << RETRO_DEVICE_ID_JOYPAD_A) ? 0x80: 0;
-   key_latch(key);
-
+   fire_gun_pressed_prev     = fire_gun_pressed;
+   set_dynamite_pressed_prev = set_dynamite_pressed;
 
    return 1;
-
 }
 

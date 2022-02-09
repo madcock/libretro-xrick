@@ -224,6 +224,7 @@ void data_file_close(data_file_t *file)
 		((zipped_t *)file)->zip = NULL;
 		free(((zipped_t *)file)->name);
 		((zipped_t *)file)->name = NULL;
+		free(file);
 	}
 	else
 		rfclose((RFILE *)file);

@@ -73,21 +73,17 @@ void syssnd_callback(U8 *stream, int len)
 
       if (sndMute)
       {
-         //stream[i] = 0x80;
          s = 0;
       }
       else
       {
-#if 0
          s += 0x80;
          if (s > 0xff)
             s = 0xff;
          if (s < 0x00)
             s = 0x00;
-         //stream[i] = (U8)s;
-#endif
-         s=s<<8 |s;
       }
+      s = (s - 128) << 8;
       audio_cb(s,s);
    }
 
@@ -302,14 +298,14 @@ sound_t *syssnd_load(char *name)
    data_file_t *f = data_file_open(name);
 
    if (!s || !f)
-      return NULL;
+      goto error;
 
    data_file_read(f, &head, 1, WAV_HEADER_SIZE);
 
    s->len         = retro_le_to_cpu32(head.Subchunk2Size);
    s->buf         = malloc(s->len);
    if (!s->buf)
-      return NULL;
+      goto error;
 
    data_file_read(f, s->buf, 1, s->len);
    s->dispose = FALSE;
@@ -317,6 +313,13 @@ sound_t *syssnd_load(char *name)
    data_file_close(f);
 
    return s;
+
+error:
+   if (s)
+      free(s);
+   if (f)
+      data_file_close(f);
+   return NULL;
 }
 
 /*
@@ -330,6 +333,7 @@ void syssnd_free(sound_t *s)
       free(s->buf);
 	s->buf = NULL;
 	s->len = 0;
+	free(s);
 }
 
 
