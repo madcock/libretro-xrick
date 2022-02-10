@@ -3,6 +3,10 @@
 #include <file/file_path.h>
 #include <string/stdstring.h>
 
+#ifdef _MSC_VER
+#include <compat/msvc.h>
+#endif
+
 #include "libretro-core.h"
 #include "libretro_core_options.h"
 
@@ -297,10 +301,10 @@ void retro_run(void)
    if (sdlscrn)
    {
       if (retro_crop_borders)
-         video_cb(sdlscrn->pixels + (VIDEO_OFFSET_X * BPP),
+         video_cb((unsigned char *)sdlscrn->pixels + (VIDEO_OFFSET_X * BPP),
                VIDEO_WIDTH, retroh, retrow << PIXEL_BYTES);
       else
-         video_cb(sdlscrn->pixels,
+         video_cb((unsigned char *)sdlscrn->pixels,
                retrow, retroh, retrow << PIXEL_BYTES);
    }
 }
