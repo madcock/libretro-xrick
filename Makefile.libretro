@@ -136,6 +136,16 @@ else ifeq ($(platform), ctr)
 	STATIC_LINKING = 1
 	STATIC_LINKING_LINK = 1
 
+# GCW0 (OpenDingux and OpenDingux Beta)
+else ifeq ($(platform), gcw0)
+	TARGET := $(TARGET_NAME)_libretro.so
+	CC = /opt/gcw0-toolchain/usr/bin/mipsel-linux-gcc
+	CXX = /opt/gcw0-toolchain/usr/bin/mipsel-linux-g++
+	AR = /opt/gcw0-toolchain/usr/bin/mipsel-linux-ar
+	SHARED := -shared -Wl,--no-undefined -Wl,--version-script=$(CORE_DIR)/libretro/core/link.T
+	fpic := -fPIC
+	CFLAGS += -DDINGUX -fomit-frame-pointer -march=mips32 -mtune=mips32r2 -mhard-float
+
 # Nintendo Game Cube
 else ifeq ($(platform), ngc)
    TARGET := $(TARGET_NAME)_libretro_ngc.a
