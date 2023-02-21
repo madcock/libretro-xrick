@@ -19,14 +19,6 @@ typedef struct SDL_Color
  Uint8 a;
 } SDL_Color;
 
-/*
-typedef struct SDL_color{
-int r;
-int g;
-int b;
-int pixel;
-} SDL_Color;
-*/
 #define SDL_Colour SDL_Color
 typedef struct SDL_Palette
 {

@@ -39,11 +39,9 @@ extern int Retro_SetColors(SDL_Surface *surface, SDL_Color *colors, int firstcol
 #define SDL_MapRGB(a, r, g, b) Retro_MapRGB(a, r, g, b)
 
 typedef struct SDL_Event{
-Uint8 type;
+   Uint8 type;
 } SDL_Event;
 
-//SOME SDL_FUNC WRAPPER
-//GLOBALS
 #define SDL_GRAB_OFF 0
 #define SDL_GRAB_ON 1
 #define SDL_HWSURFACE 0
@@ -56,7 +54,6 @@ Uint8 type;
 #define SDL_DOUBLEBUF 0
 #define SDL_RESIZABLE 0
 
-//SURFACE
 #define SDL_SetVideoMode(w, h, b, f) Retro_SetVideoMode((w),(h),(b))
 #define SDL_FreeSurface(a) Retro_FreeSurface((a))
 #define SDL_CreateRGBSurface(a,w,h,d,rm,gm,bm,am) Retro_CreateRGBSurface((w),(h),(d),(rm),(gm),(bm),(am))
