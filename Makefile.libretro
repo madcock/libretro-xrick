@@ -124,6 +124,13 @@ else ifeq ($(platform), tvos-arm64)
    fpic := -fPIC
    SHARED := -dynamiclib
 
+ifeq ($(IOSSDK),)
+   IOSSDK := $(shell xcodebuild -version -sdk appletvos Path)
+endif
+   CC = clang -arch arm64 -isysroot $(IOSSDK)
+   CXX = clang++ -arch arm64 -isysroot $(IOSSDK)
+   CFLAGS += -DIOS -DIOS_ARM64
+
 # CTR (3DS)
 else ifeq ($(platform), ctr)
 	TARGET := $(TARGET_NAME)_libretro_$(platform).a
