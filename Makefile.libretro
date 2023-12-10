@@ -160,7 +160,7 @@ else ifeq ($(platform), sf2000)
    CC = $(MIPS)gcc
    CXX = $(MIPS)g++
    AR = $(MIPS)ar
-   CFLAGS = -EL -march=mips32 -mtune=mips32 -msoft-float -G0 -mno-abicalls -fno-pic
+   CFLAGS += -EL -march=mips32 -mtune=mips32 -msoft-float -G0 -mno-abicalls -fno-pic
    CFLAGS += -ffast-math -fomit-frame-pointer -ffunction-sections -fdata-sections 
    CFLAGS += -DSF2000
    CXXFLAGS = $(CFLAGS)
